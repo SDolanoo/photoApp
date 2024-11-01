@@ -10,28 +10,31 @@ KV = '''
 
 <MD3ListItem>
     MDListItem:
+        size_hint_x: self.parent.width
+
         MDListItemLeadingIcon:
             icon: "account"
-    
+
         MDListItemHeadlineText:
             text: "Headline"
-    
+
         MDListItemSupportingText:
             text: "Supporting text"
-    
+
         MDListItemTertiaryText:
             text: "Tertiary text"
-    
+
         MDListItemTrailingSupportingText:
             text: "Textttt"
 
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
+    orientation: "vertical"
 
     MDTopAppBar:
         type: "small"
         size_hint_x: 1
-        pos_hint: {"center_x": .5, "center_y": .95}
+        pos_hint: {"center_x": .5, "center_y": 0.96}
         theme_bg_color: "Custom"
         md_bg_color: "#4267B2"
 
@@ -40,7 +43,7 @@ MDScreen:
             MDActionTopAppBarButton:
                 icon: "menu"
                 on_release: nav_drawer.set_state("toggle")
-                
+
 
         MDTopAppBarTitle:
             text: "PhotoApp"
@@ -52,13 +55,16 @@ MDScreen:
                 icon: "dots-vertical"
                 on_release: app.settings_menu_open()
 
-   
-    MDGridLayout:
-        id: box
-        cols: 1
-        adaptive_height: True
-            
-            
+
+    MDScrollView:
+        pos_hint: {"center_x": .5, "center_y": 0.41}
+        MDGridLayout:
+            id: box
+            cols: 1
+            pos_hint: {"center_x": .5}
+
+
+
 
     MDBottomAppBar:
         id: bottom_appbar
@@ -72,40 +78,40 @@ MDScreen:
             id: bottom_fab_app_bar
             icon: "camera-plus-outline"
             on_release: app.bottom_menu_open()
-       
+
     MDNavigationLayout:
-                
+
         MDNavigationDrawer:
             id: nav_drawer
             radius: 0, dp(16), dp(16), 0
-        
+
             MDNavigationDrawerMenu:
-    
+
                 MDNavigationDrawerLabel:
                     text: "Menu"
-    
+
                 MDNavigationDrawerItem:
-    
+
                     MDNavigationDrawerItemLeadingIcon:
                         icon: "receipt-text-outline"
-    
+
                     MDNavigationDrawerItemText:
                         text: "Paragony"
-    
+
                     MDNavigationDrawerItemTrailingText:
                         text: "0"
-                
+
                 MDNavigationDrawerItem:
-    
+
                     MDNavigationDrawerItemLeadingIcon:
                         icon: "invoice-outline"
-    
+
                     MDNavigationDrawerItemText:
                         text: "Faktury"
-    
+
                     MDNavigationDrawerItemTrailingText:
                         text: "0"
-    
+
                 MDNavigationDrawerDivider:
 '''
 
@@ -113,6 +119,7 @@ MDScreen:
 class MD3ListItem(MDListItem):
     '''Implements a material design MDListItem.'''
     pass
+
 
 class Photoapp(MDApp):
 
@@ -131,7 +138,7 @@ class Photoapp(MDApp):
         return Builder.load_string(KV)
 
     def on_start(self):
-        for i in range(5):
+        for i in range(20):
             self.root.ids.box.add_widget(MD3ListItem())
 
     def settings_menu_open(self):
