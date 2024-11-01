@@ -10,8 +10,6 @@ KV = '''
 
 <MD3ListItem>
     MDListItem:
-        size_hint_x: self.parent.width
-        
         MDListItemLeadingIcon:
             icon: "account"
     
@@ -29,12 +27,11 @@ KV = '''
 
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
-    orientation: "vertical"
 
     MDTopAppBar:
         type: "small"
         size_hint_x: 1
-        pos_hint: {"center_x": .5, "center_y": 0.96}
+        pos_hint: {"center_x": .5, "center_y": .95}
         theme_bg_color: "Custom"
         md_bg_color: "#4267B2"
 
@@ -55,14 +52,11 @@ MDScreen:
                 icon: "dots-vertical"
                 on_release: app.settings_menu_open()
 
-  
-    MDScrollView:
-        pos_hint: {"center_x": .5, "center_y": 0.41}
-        MDGridLayout:
-            id: box
-            cols: 1
-            pos_hint: {"center_x": .5}
-        
+   
+    MDGridLayout:
+        id: box
+        cols: 1
+        adaptive_height: True
             
             
 
@@ -137,7 +131,7 @@ class Photoapp(MDApp):
         return Builder.load_string(KV)
 
     def on_start(self):
-        for i in range(20):
+        for i in range(5):
             self.root.ids.box.add_widget(MD3ListItem())
 
     def settings_menu_open(self):
