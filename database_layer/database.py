@@ -29,7 +29,7 @@ class Users(Base):
 
 
 class Receipts(Base):
-    __tablename__ = 'reports'
+    __tablename__ = 'receipts'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     receipt_name = Column(String(100), unique=True, nullable=False)
@@ -39,7 +39,7 @@ class Receipts(Base):
 
 
 class Invoices(Base):
-    __tablename__ = 'reports'
+    __tablename__ = 'invoices'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     invoice_name = Column(String(100), unique=True, nullable=False)
