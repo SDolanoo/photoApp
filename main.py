@@ -3,135 +3,14 @@ from kivy.lang import Builder
 from kivymd.uix.appbar import MDActionBottomAppBarButton
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTrailingSupportingText
-from kivy.properties import StringProperty
-from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.transition import MDSharedAxisTransition
 from database_layer import database_brain as dbrain
+import os
+import google.generativeai as genai
+from mainKV import KV
 
-KV = '''
-#:import MDActionBottomAppBarButton kivymd.uix.appbar.MDActionBottomAppBarButton
-MDScreenManager:
-    transition: app.transition
-    
-    MDScreen:
-        name: "screen1"
-        md_bg_color: self.theme_cls.backgroundColor
-    
-        MDTopAppBar:
-            type: "small"
-            theme_bg_color: "Custom"
-            md_bg_color: "#4267B2"
-            id: top_appbar
-            pos_hint: {"center_x": .5, "center_y": 0.96}
-    
-            MDTopAppBarLeadingButtonContainer:
-    
-                MDActionTopAppBarButton:
-                    icon: "menu"
-                    on_release: nav_drawer.set_state("toggle")
-    
-    
-            MDTopAppBarTitle:
-                text: "PhotoApp"
-    
-            MDTopAppBarTrailingButtonContainer:
-    
-                MDActionTopAppBarButton:
-                    id: app_bar_button
-                    icon: "dots-vertical"
-                    on_release: app.settings_menu_open()
-    
-    
-        MDScrollView:
-            padding: [64, 0, 80, 0]
-            size_hint_y: None
-            height: self.parent.height - dp(138)
-            pos_hint: {"center_x": .5, "center_y": 0.525}
-            MDGridLayout:
-                id: box
-                cols: 1
-                pos_hint: {"center_x": .5}
-                adaptive_height: True
-    
-    
-        MDBottomAppBar:
-            id: bottom_appbar
-            action_items:
-                [
-                MDActionBottomAppBarButton(icon="gmail"),
-                MDActionBottomAppBarButton(icon="bookmark"),
-                ]
-    
-            MDFabBottomAppBarButton:
-                id: bottom_fab_app_bar
-                icon: "camera-plus-outline"
-                # on_release: app.bottom_menu_open()
-                on_release: root.current = "screen2"
-    
-        MDNavigationLayout:
-    
-            MDNavigationDrawer:
-                id: nav_drawer
-                radius: 0, dp(16), dp(16), 0
-    
-                MDNavigationDrawerMenu:
-    
-                    MDNavigationDrawerLabel:
-                        text: "Menu"
-    
-                    MDNavigationDrawerItem:
-                        on_release: app.show_paragony()
-                        MDNavigationDrawerItemLeadingIcon:
-                            icon: "receipt-text-outline"
-    
-                        MDNavigationDrawerItemText:
-                            text: "Paragony"
-    
-                        MDNavigationDrawerItemTrailingText:
-                            id: receipt_count_label
-                            text: str(app.receipt_count)
-    
-                    MDNavigationDrawerItem:
-                        on_release: app.show_faktury()
-                        MDNavigationDrawerItemLeadingIcon:
-                            icon: "invoice-outline"
-    
-                        MDNavigationDrawerItemText:
-                            text: "Faktury"
-    
-                        MDNavigationDrawerItemTrailingText:
-                            id: invoice_count_label
-                            text: str(app.invoice_count)
-    
-                    MDNavigationDrawerDivider:
-    
-    MDScreen:
-        name: "screen2"
-        MDFloatLayout:
-            MDIconButton:
-                icon: "window-close"
-                style: "standard"
-                pos_hint: {"center_x": 0.05, "center_y": 0.95}
-                
-            MDIconButton:
-                icon: "flash"
-                style: "standard"
-                pos_hint: {"center_x": 0.95, "center_y": 0.95}
-                
-            MDIconButton:
-                icon: "flash-off"
-                style: "standard"
-                pos_hint: {"center_x": 0.9, "center_y": 0.95}
-                
-            MDIconButton:
-                icon: "circle-outline"
-                pos_hint: {"center_x": 0.5, "center_y": 0.08}
-                theme_font_size: "Custom"
-                font_size: "84sp"
-                radius: [self.height / 2, ]
-                size_hint: None, None
-                size: "84dp", "84dp"
-    '''
+genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
 
 class Photoapp(MDApp):
     def __init__(self, **kwargs):
@@ -143,6 +22,8 @@ class Photoapp(MDApp):
         self.transition = MDSharedAxisTransition()
         self.transition.transition_axis = "y"
         self.transition.duration = 0.2
+
+
     def change_actions_items(self):
         self.root.ids.bottom_appbar.action_items = [
             MDActionBottomAppBarButton(icon="magnify"),
@@ -168,6 +49,8 @@ class Photoapp(MDApp):
                 )
             self.root.ids.box.add_widget(list_item)
 
+    def prpr(self, x, y):
+        print(x, "   ", y)
 
     def settings_menu_open(self):
         menu_items = [
@@ -207,6 +90,59 @@ class Photoapp(MDApp):
 
     def menu_callback(self, text_item):
         print(text_item)
+
+    def capture_photo(self):
+
+        self.root.ids.camera.export_to_png("image.png")
+
+        self.ai_prompt()
+
+    def ai_prompt(self):
+
+        def upload_to_gemini(path, mime_type=None):
+            """Uploads the given file to Gemini.
+
+            See https://ai.google.dev/gemini-api/docs/prompting_with_media
+            """
+            file = genai.upload_file(path, mime_type=mime_type)
+            print(f"Uploaded file '{file.display_name}' as: {file.uri}")
+            return file
+
+        # Create the model
+        generation_config = {
+            "temperature": 1,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 8192,
+            "response_mime_type": "application/json",
+        }
+
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-pro",
+            generation_config=generation_config,
+            system_instruction="przeczytaj zdjęcie paragonu i uzyskaj z niego nastepujące informacje w formacie json: data zakupu, wymień wszystkie produkty i ich ceny, suma PTU, SUMA PLN",
+        )
+
+        # TODO Make these files available on the local file system
+        # You may need to update the file paths
+        files = [
+            upload_to_gemini("image.png", mime_type="image/png"),
+        ]
+
+        chat_session = model.start_chat(
+            history=[
+                {
+                    "role": "user",
+                    "parts": [
+                        files[ 0 ],
+                    ],
+                },
+            ]
+        )
+
+        response = chat_session.send_message("INSERT_INPUT_HERE")
+
+        print(response.text)
 
     def show_paragony(self):
         self.clear_grid_layout()
