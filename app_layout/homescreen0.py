@@ -8,6 +8,7 @@ from database_layer import database_brain as dbrain
 HS0 = """
 #:import MDActionBottomAppBarButton kivymd.uix.appbar.MDActionBottomAppBarButton
 <HomeScreen0>:
+    name: "screen0"
     MDTopAppBar:
         type: "small"
         theme_bg_color: "Custom"
@@ -57,7 +58,7 @@ HS0 = """
             id: bottom_fab_app_bar
             icon: "camera-plus-outline"
             # on_release: app.bottom_menu_open()
-            on_release: root.current = "screen2"
+            on_release: app.swap_to_photoscreen1()
 
     MDNavigationLayout:
 
