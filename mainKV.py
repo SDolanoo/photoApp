@@ -105,10 +105,12 @@ MDScreenManager:
             # CAMERA SETUP
             Camera:
                 id: camera
-                resolution: (378, 645)
+                resolution: (self.height, self.width)
                 # SET PLAY TO AUTO TRUE
                 play: True
                 pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                allow_stretch: True
+                keep_ratio: False
 
             MDIconButton:
                 icon: "window-close"

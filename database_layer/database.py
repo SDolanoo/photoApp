@@ -32,7 +32,7 @@ class Receipts(Base):
     __tablename__ = 'receipts'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    receipt_name = Column(String(100), unique=True, nullable=False)
+    receipt_name = Column(String(100), nullable=False)
     receipt_description = Column(Text)
     receipt_amount = Column(String(100), nullable=False)
     users = relationship('Users', secondary=user_receipts, back_populates='receipts')

@@ -5,9 +5,18 @@ def add_test_receipt() -> None:
     for i in range(10):
         new_receipt = Receipts(receipt_name=f'Receipt {i}',
                                receipt_description=f"{i} : {i} : {i}",
-                               receipt_amount=f"{i^2}")
+                               receipt_amount=f"{i^2}"
+                               )
         session.add(new_receipt)
         session.commit()
+
+def add_recipe(receipt_name, receipt_description, receipt_amount) -> None:
+    new_receipt = Receipts(receipt_name=f'{receipt_name}',
+                           receipt_description=f"{receipt_description}",
+                           receipt_amount=f"{receipt_amount}"
+                           )
+    session.add(new_receipt)
+    session.commit()
 
 
 def list_all_receipts() -> list:

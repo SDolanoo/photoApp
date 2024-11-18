@@ -1,30 +1,37 @@
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
-from kivy.uix.boxlayout import BoxLayout
 from kivy.utils import platform
 from camera4kivy import Preview
+
+from datetime import datetime
+from functools import partial
+
 from app_layout.just_screen import JustScreen
+from app_layout.acceptancescreen2 import AcceptanceScreen2
 
 PS1 = """
 <PhotoScreen1>:
     name: "screen1"
     photo_preview: photo_layout.ids.preview
     PhotoLayout1:
-        id:photo_layout
+        id: photo_layout
 """
 
 
 class PhotoScreen1(JustScreen):
     photo_preview = ObjectProperty(None)
 
-    def __init__(self, **args):
+    def __init__(self, controller, **args):
         Builder.load_string(PS1)
         super().__init__()
+        self.controller = controller
 
     def on_enter(self):
-        self.photo_preview.connect_camera()
+        self.photo_preview.connect_camera(mirrored=False)
 
     def on_pre_leave(self):
         self.photo_preview.disconnect_camera()
@@ -32,26 +39,14 @@ class PhotoScreen1(JustScreen):
 
 PL1 = """
 <PhotoLayout1>:
-    name: "screen1"
-    Background1:
-        id: pad_end
     Preview:
         id: preview
-        letterbox_color: .3, .3, 3, .5
     ButtonsLayout1:
         id: buttons
-
-<Background1@Label>:
-    canvas:
-        Color: 
-            rgba: .8, .8, 8, .8
-        Rectangle:
-            pos: self.pos
-            size: self.size
 """
 
 
-class PhotoLayout1(BoxLayout):
+class PhotoLayout1(FloatLayout):
 
     def __init__(self, **args):
         Builder.load_string(PL1)
@@ -60,40 +55,38 @@ class PhotoLayout1(BoxLayout):
     def on_size(self, layout, size):
         if Window.width < Window.height:
             self.orientation = 'vertical'
-            self.ids.preview.size_hint = (1, .8)
+            self.ids.preview.size_hint = (1, 1)
             self.ids.buttons.size_hint = (1, .2)
-            self.ids.pad_end.size_hint = (1, .1)
         else:
             self.orientation = 'horizontal'
-            self.ids.preview.size_hint = (.8, 1)
+            self.ids.preview.size_hint = (1, 1)
             self.ids.buttons.size_hint = (.2, 1)
-            self.ids.pad_end.size_hint = (.1, 1)
 
 
 BL1 = """
 <ButtonsLayout1>:
-    Background1:
-    Button:
+    MDIconButton:
         id:other
-        on_press: root.select_camera('toggle')
-        height: self.width
-        width: self.height
-        background_normal: 'icons/camera-flip-outline.png'
-        background_down:   'icons/camera-flip-outline.png'
-    Button:
+        icon: "window-close"
+        on_release: app.back_to_homescreen0()
+        style: "standard"
+        pos_hint: {"center_x": 0.05, "center_y": 0.95}
+    MDIconButton:
         id:flash
-        on_press: root.flash()
-        height: self.width
-        width: self.height
-        background_normal: 'icons/flash-off.png'
-        background_down:   'icons/flash-off.png'
-    Button:
+        icon: "flash"
+        style: "standard"
+        pos_hint: {"center_x": 0.95, "center_y": 0.95}
+        on_release: root.flash()
+    MDIconButton:
         id:photo
-        on_press: root.photo()
-        height: self.width
-        width: self.height
-        background_normal: 'icons/camera_white.png'
-        background_down:   'icons/camera_red.png'
+        on_release: root.photo()
+        icon: "circle-outline"
+        pos_hint: {"center_x": 0.5, "center_y": 0.08}
+        theme_font_size: "Custom"
+        font_size: "84sp"
+        radius: [self.height / 2, ]
+        size_hint: None, None
+        size: "84dp", "84dp"
 """
 
 
@@ -124,19 +117,26 @@ class ButtonsLayout1(RelativeLayout):
             self.ids.flash.size_hint = (None, .15)
 
     def photo(self):
-        self.parent.ids.preview.capture_photo()
+        """
+        https://github.com/Android-for-Python/Camera4Kivy?tab=readme-ov-file#location
+        """
+        now = datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
+        self.photo2(now)
+
+    def photo2(self, now):
+        self.parent.ids.preview.capture_photo(location='private',
+                                              subdir="Photos",
+                                              name=f"recipe_{now}")
+        Clock.schedule_once(partial(self.photo3, path=f"Photos/recipe_{now}.jpg"), 0.1)
+
+    def photo3(self, dt, path):
+        self.parent.parent.controller.show_acceptancescreen2(path=path)
 
     def flash(self):
         icon = self.parent.ids.preview.flash()
         if icon == 'on':
-            self.ids.flash.background_normal = 'icons/flash.png'
-            self.ids.flash.background_down = 'icons/flash.png'
+            self.ids.flash.icon = 'flash'
         elif icon == 'auto':
-            self.ids.flash.background_normal = 'icons/flash-auto.png'
-            self.ids.flash.background_down = 'icons/flash-auto.png'
+            self.ids.flash.icon = 'flash-auto'
         else:
-            self.ids.flash.background_normal = 'icons/flash-off.png'
-            self.ids.flash.background_down = 'icons/flash-off.png'
-
-    def select_camera(self, facing):
-        self.parent.ids.preview.select_camera(facing)
+            self.ids.flash.icon = 'flash-off'

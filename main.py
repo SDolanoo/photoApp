@@ -8,9 +8,12 @@ from database_layer import database_brain as dbrain
 import os
 import google.generativeai as genai
 from mainKV import KV
+from kivy.core.window import Window
+
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
+Window.size = (378, 678)
 
 class Photoapp(MDApp):
     def __init__(self, **kwargs):
@@ -22,6 +25,8 @@ class Photoapp(MDApp):
         self.transition = MDSharedAxisTransition()
         self.transition.transition_axis = "y"
         self.transition.duration = 0.2
+
+
 
 
     def change_actions_items(self):

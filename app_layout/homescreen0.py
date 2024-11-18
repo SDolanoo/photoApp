@@ -27,6 +27,11 @@ HS0 = """
             text: "PhotoApp"
 
         MDTopAppBarTrailingButtonContainer:
+        
+            MDActionTopAppBarButton:
+                id: delete_images
+                icon: "delete"
+                on_release: app.delete_files()
 
             MDActionTopAppBarButton:
                 id: app_bar_button
@@ -104,9 +109,10 @@ class HomeScreen0(JustScreen):
     receipt_count = len(dbrain.list_all_receipts())
     invoice_count = len(dbrain.list_all_invoices())
 
-    def __init__(self, **args):
+    def __init__(self, controller, **args):
         Builder.load_string(HS0)
         super().__init__()
+        self.controller = controller
         self.fill_the_grid()
 
 
