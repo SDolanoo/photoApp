@@ -3,10 +3,11 @@ import google.generativeai as genai
 
 class Ai:
 
-    def __init__(self, path):
-        self.image_path = path
+    def __init__(self, **args):
+        self.image_path = None
         self.last_response = ""
         self.history = None
+
 
     def ai_first_prompt(self):
         def upload_to_gemini(path, mime_type=None):

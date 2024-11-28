@@ -4,18 +4,15 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.properties import ObjectProperty
 from kivymd.uix.button import MDButton, MDButtonText
+from kivy.uix.widget import Widget
 from kivymd.uix.dialog import (
     MDDialog,
     MDDialogHeadlineText,
    MDDialogButtonContainer,
    MDDialogSupportingText,
     )
-from kivy.uix.widget import Widget
 
-from gen_ai.ai import Ai
-import threading
 import os
-import json
 from functools import partial
 
 from app_layout.just_screen import JustScreen
@@ -29,6 +26,14 @@ AS2 = """
     pp: acceptance_layout_2.ids.image
     AcceptanceLayout2:
         id: acceptance_layout_2
+        
+    MDCircularProgressIndicator:
+        id: progress
+        determinate: True
+        active: False
+        size_hint: None, None
+        size: "48dp", "48dp"
+        pos_hint: {'center_x': .5, 'center_y': .5}
 """
 
 
@@ -42,7 +47,14 @@ class AcceptanceScreen2(JustScreen):
         self.controller = controller
 
     def on_pre_enter(self, *args):
-        self.pp.source = self.controller.path
+        self.pp.source = self.controller.image_path
+        self.stop_waiting_animation()
+
+    def start_waiting_animation(self):
+        self.ids.progress.active = True
+
+    def stop_waiting_animation(self):
+        self.ids.progress.active = False
 
 
 
@@ -55,6 +67,17 @@ AL2 = """
         keep_ratio:False
     ButtonsLayout2:
         id: buttons
+        
+    # MDButton:
+    #     id: xxx
+    #     text: "start"
+    #     on_release: root.xxx()
+    #     pos_hint: {"center_x": .2, "center_y": .5}
+    # MDButton:
+    #     id: ddd
+    #     text: "stop"
+    #     on_release: root.ddd()
+    #     pos_hint: {"center_x": .8, "center_y": .5}
 """
 
 
@@ -63,7 +86,6 @@ class AcceptanceLayout2(FloatLayout):
     def __init__(self, **args):
         Builder.load_string(AL2)
         super().__init__()
-
 
 BL2 = """
 <ButtonsLayout2>:
@@ -108,11 +130,6 @@ BL2 = """
             theme_text_color: "Custom"
             text_color: "white"
             pos_hint: {"center_x": .5, "center_y": .5}
-    # MDButton:
-    #     id: hidden
-    #     on_release: app.print()
-    #     theme_bg_color: "Custom"
-    #     md_bg_color: [0, 0, 0, 0]
 """
 
 
@@ -127,25 +144,8 @@ class ButtonsLayout2(RelativeLayout):
         self.get_prompt()
 
     def get_prompt(self):
-        def format_prompt(text) -> list:
-            jo = json.loads(text)
-            date = jo['data_zakupu']
-            produkty = [produkt for produkt in jo['produkty']]
-            suma_pln = jo['suma_pln']
-            return_text = f"Data zakupu: {jo['data_zakupu']}\n"
-            for p in produkty:
-                t = f"Nazwa produkty: {p['nazwa']}, cena: {p['cena']}\n"
-                return_text = return_text + t
-            return_text = return_text + f"Suma ptu: {jo['suma_ptu']}\n"
-            return_text = return_text + f"Suma pln: {jo['suma_pln']}"
-            return [return_text, date, produkty, suma_pln]
-
-
-
-        # ai = Ai(path=self.parent.ids.image.source)
-        ai = Ai(path="paragon_2.jpg")
-        text = ai.ai_first_prompt()
-        data_for_dialog = format_prompt(text)
+        self.parent.parent.start_waiting_animation()
+        data_for_dialog = self.parent.parent.controller.get_prompt()
         Clock.schedule_once(partial(self.dialog_popup, data_for_dialog), 0.1)
 
     def dialog_popup(self, data_for_dialog: list, dt):
@@ -167,7 +167,7 @@ class ButtonsLayout2(RelativeLayout):
                     MDButton(
                         MDButtonText(text="Cancel"),
                         style="text",
-                        on_release=self.close_dialog
+                        on_release=self.close_dialog_and_back_to_photo
                     ),
                     MDButton(
                         MDButtonText(text="Accept"),
@@ -177,6 +177,8 @@ class ButtonsLayout2(RelativeLayout):
                     spacing="8dp",
                 )
             )
+            self.dialog.open()
+        else:
             self.dialog.open()
 
     def add_recipe(self, data: list, dt) -> None:
@@ -188,9 +190,10 @@ class ButtonsLayout2(RelativeLayout):
         self.parent.parent.parent.current = "screen0"
         self.parent.parent.parent.remove_widget(self.parent.parent)
 
-    def close_dialog(self, dt):
+    def close_dialog_and_back_to_photo(self, dt):
         self.dialog.dismiss()
         self.dialog = None
+        self.parent.parent.controller.back_from_acceptancescreen2()
 
     def retry(self):
         image_path = self.parent.ids.image.source

@@ -106,8 +106,8 @@ HS0 = """
 
 
 class HomeScreen0(JustScreen):
-    receipt_count = len(dbrain.list_all_receipts())
-    invoice_count = len(dbrain.list_all_invoices())
+    receipt_count = len(dbrain.list_all_receipts(uzytkownik_id=1))
+    invoice_count = len(dbrain.list_all_invoices(uzytkownik_id=1))
 
     def __init__(self, controller, **args):
         Builder.load_string(HS0)
@@ -117,25 +117,18 @@ class HomeScreen0(JustScreen):
 
 
     def fill_the_grid(self):
-        all_receipts = dbrain.list_all_receipts()
-        for receipt in all_receipts:
-            list_item = MDListItem(
-                MDListItemHeadlineText(text=f"{receipt[ 1 ]}"),
-                MDListItemSupportingText(text=f"desc // {receipt[ 2 ]} // desc"),
-                MDListItemTrailingSupportingText(text=f"{receipt[ 3 ]}")
-            )
-            self.ids.box.add_widget(list_item)
+        self.show_paragony()
 
     def show_paragony(self):
         self.clear_grid_layout()
 
-        all_receipts = dbrain.list_all_receipts()
+        all_receipts = dbrain.list_all_receipts(uzytkownik_id=1)
 
         for receipt in all_receipts:
             list_item = MDListItem(
-                MDListItemHeadlineText(text=f"{receipt[ 1 ]}"),
-                MDListItemSupportingText(text=f"desc // {receipt[ 2 ]} // desc"),
-                MDListItemTrailingSupportingText(text=f"{receipt[ 3 ]}")
+                MDListItemHeadlineText(text=f"{receipt['data_zakupu']}"),
+                MDListItemSupportingText(text=f"{receipt['nazwa_sklepu']}"),
+                MDListItemTrailingSupportingText(text=f"{receipt['kwota_calkowita']}")
             )
             self.ids.box.add_widget(list_item)
 
@@ -145,13 +138,13 @@ class HomeScreen0(JustScreen):
     def show_faktury(self):
         self.clear_grid_layout()
 
-        all_invoices = dbrain.list_all_invoices()
+        all_invoices = dbrain.list_all_invoices(uzytkownik_id=1)
 
         for invoice in all_invoices:
             list_item = MDListItem(
-                MDListItemHeadlineText(text=f"{invoice[ 1 ]}"),
-                MDListItemSupportingText(text=f"desc // {invoice[ 2 ]} // desc"),
-                MDListItemTrailingSupportingText(text=f"{invoice[ 3 ]}")
+                MDListItemHeadlineText(text=f"{invoice['numer_faktury']}"),
+                MDListItemSupportingText(text=f"{invoice['razem_stawka']}"),
+                MDListItemTrailingSupportingText(text=f"{invoice['razem_brutto']}")
             )
             self.ids.box.add_widget(list_item)
 
@@ -162,10 +155,10 @@ class HomeScreen0(JustScreen):
         self.ids.box.clear_widgets()
 
     def set_navigation_drawer_count(self):
-        all_receipts = dbrain.list_all_receipts()
+        all_receipts = dbrain.list_all_receipts(uzytkownik_id=1)
         self.receipt_count = len(all_receipts)
         self.ids.receipt_count_label.text = str(self.receipt_count)
 
-        all_invoices = dbrain.list_all_invoices()
+        all_invoices = dbrain.list_all_invoices(uzytkownik_id=1)
         self.invoice_count = len(all_invoices)
         self.ids.invoice_count_label.text = str(self.invoice_count)

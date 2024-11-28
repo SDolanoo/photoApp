@@ -1,0 +1,9 @@
+openpyxl
+kivy
+kivymd
+pandas
+google
+camera4kivy
+cv2
+pillow
+sqlalchemy
