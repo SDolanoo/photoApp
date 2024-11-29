@@ -130,7 +130,7 @@ class ButtonsLayout1(RelativeLayout):
         Clock.schedule_once(partial(self.photo3, path=f"Photos/recipe_{now}.jpg"), 0.1)
 
     def photo3(self, dt, path):
-        self.parent.parent.controller.show_acceptancescreen2(path=path)
+        self.parent.parent.controller.show_acceptancescreen2(path="Photos/paragon_4.jpg")
 
     def flash(self):
         icon = self.parent.ids.preview.flash()

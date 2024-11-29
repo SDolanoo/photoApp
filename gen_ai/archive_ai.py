@@ -53,5 +53,4 @@ def ai_prompt(self):
     )
 
     response = chat_session.send_message("INSERT_INPUT_HERE")
-    chat_session.histor
     print(response.text)

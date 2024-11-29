@@ -95,23 +95,18 @@ def add_user(login: str, password: str, email: str):
     print(f"Użytkownik '{login}' został dodany do bazy danych.")
 
 
-def add_recipe(uzytkownik_id: int, data: list, nazwa_sklepu: str, kwota_calkowita: str, produkty: list) -> None:
+def add_recipe(uzytkownik_id: int, recipe_date: list, nazwa_sklepu: str, kwota_calkowita: str, produkty: list) -> None:
     def add_product(id_paragonu: int):
         # Dodawanie produktów
         for produkt in produkty:
-            try:
-                nazwa_produktu, cena_suma, ilosc = produkt
-                ilosc = int(ilosc)  # Upewniamy się, że ilość jest liczbą całkowitą
-                cena_jednostkowa = round(float(cena_suma) / ilosc, 2)  # Obliczamy cenę jednostkową
-            except (ValueError, TypeError):
-                raise ValueError(
-                    "Każdy produkt musi być w formacie [nazwa_produktu, cena_suma, ilosc] z poprawnymi danymi.")
-
+            nazwa_produktu = produkt['nazwa_produktu']
+            cena_suma = produkt['cena_suma']
+            ilosc = produkt['ilosc']
             # Tworzenie obiektu produktu
             produkt_paragon = ProduktyParagon(
                 id_paragonu=id_paragonu,
                 nazwa_produktu=nazwa_produktu,
-                cena_jednostkowa=cena_jednostkowa,
+                cena_suma=cena_suma,
                 ilosc=ilosc,
                 id_kategorii=None,  # Zakładamy brak kategorii
                 kategoria_id=None
@@ -125,7 +120,7 @@ def add_recipe(uzytkownik_id: int, data: list, nazwa_sklepu: str, kwota_calkowit
     """
     paragon = Paragony(
         uzytkownik_id=uzytkownik_id,
-        data_zakupu=date(data[0], data[1], data[2]),  # Ustalona data testowa
+        data_zakupu=date(recipe_date[0], recipe_date[1], recipe_date[2]),  # Ustalona data testowa
         nazwa_sklepu=nazwa_sklepu,
         kwota_calkowita=kwota_calkowita
     )
@@ -175,7 +170,7 @@ def list_all_receipts(uzytkownik_id: int) -> list:
             "produkty": [
                 {
                     "nazwa_produktu": produkt.nazwa_produktu,
-                    "cena_jednostkowa": produkt.cena_suma,
+                    "cena_suma": produkt.cena_suma,
                     "ilosc": produkt.ilosc,
                 }
                 for produkt in produkty

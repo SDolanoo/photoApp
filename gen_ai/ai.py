@@ -1,6 +1,8 @@
 import os
 import google.generativeai as genai
 
+genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
 class Ai:
 
     def __init__(self, **args):
@@ -8,8 +10,7 @@ class Ai:
         self.last_response = ""
         self.history = None
 
-
-    def ai_first_prompt(self):
+    def ai_recipe_prompt(self):
         def upload_to_gemini(path, mime_type=None):
             """Uploads the given file to Gemini.
 
@@ -29,10 +30,18 @@ class Ai:
         }
 
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-pro",
+            model_name="gemini-1.5-flash",
             generation_config=generation_config,
-            system_instruction="przeczytaj zdjęcie paragonu i uzyskaj z niego nastepujące informacje w formacie json."
-                               "Dane MUSZĄ mieć następujące nazwy: 'data_zakupu', 'produkty' i do każdego produktu jego 'nazwa' i 'cena', 'suma_ptu', 'suma_pln'",
+            system_instruction="przeczytaj zdjęcie paragonu i uzyskaj z niego nastepujące informacje. Całość napisz w "
+                               "podanym formacie json zmieniając tylko value, key muszą zostać nie zmienione. Napisz "
+                               "tylko json w podanym niżej formacie. "
+                               "Jeśli jest informacja w nawiasie, zastosuj się do tej informacji, nie wstawiając jej w odpowiedź. "
+                               "Jeśli nie udało się znaleźć informacji, "
+                               "napisz 'null'. Dane MUSZĄ mieć następujące nazwy:\n{\n  \"data_zakupu\": "
+                               "\"data_zakupu\",\n  \"nazwa_sklepu\": \"nazwa_sklepu\",\n  \"kwota_calkowita\": "
+                               "\"kwota_calkowita\",\n  \"produkty\": [\n    {\n      \"nazwa_produktu\": "
+                               "\"nazwa_produktu\",\n      \"cena_suma\": \"cena_jednostkowa\",\n      \"ilosc\": "
+                               "\"ilosc\"(jeśli ilość nie jest integerem napisz tylko float np. 0.55)\n    }\n  ]\n}",
         )
 
         # TODO Make these files available on the local file system
@@ -46,7 +55,7 @@ class Ai:
                 {
                     "role": "user",
                     "parts": [
-                        files[ 0 ],
+                        files[0],
                     ],
                 },
             ]
@@ -57,59 +66,16 @@ class Ai:
         self.history = chat_session.history
         print(response.text)
         return response.text
-
-
-    # def correction_prompt(self, image_path: str):
-    #
-    #     def upload_to_gemini(path, mime_type=None):
-    #         """Uploads the given file to Gemini.
-    #
-    #         See https://ai.google.dev/gemini-api/docs/prompting_with_media
-    #         """
-    #         file = genai.upload_file(path, mime_type=mime_type)
-    #         print(f"Uploaded file '{file.display_name}' as: {file.uri}")
-    #         return file
-    #
-    #     # Create the model
-    #     generation_config = {
-    #         "temperature": 1,
-    #         "top_p": 0.95,
-    #         "top_k": 40,
-    #         "max_output_tokens": 8192,
-    #         "response_mime_type": "application/json",
-    #     }
-    #
-    #     model = genai.GenerativeModel(
-    #         model_name="gemini-1.5-pro",
-    #         generation_config=generation_config,
-    #         system_instruction="przeczytaj zdjęcie paragonu i uzyskaj z niego nastepujące informacje w formacie json: data zakupu, wymień wszystkie produkty i ich ceny, suma PTU, SUMA PLN",
-    #     )
-    #
-    #     # TODO Make these files available on the local file system
-    #     # You may need to update the file paths
-    #     files = [
-    #         upload_to_gemini(image_path, mime_type="image/jpeg"),
+    # RESPONSE.TEXT LOOKS LIKE THIS SHIT
+    # {
+    #     "data_zakupu": "data_zakupu",
+    #     "nazwa_sklepu": "nazwa_sklepu",
+    #     "kwota_calkowita": "kwota_calkowita",
+    #     "produkty": [
+    #         {
+    #             "nazwa_produktu": "nazwa_produktu",
+    #             "cena_suma": "cena_jednostkowa",
+    #             "ilosc": "ilosc"
+    #         }
     #     ]
-    #
-    #     chat_session = model.start_chat(
-    #         history=[
-    #             {
-    #                 "role": "user",
-    #                 "parts": [
-    #                     files[ 0 ],
-    #                 ],
-    #             },
-    #             {
-    #                 "role": "model",
-    #                 "parts": [
-    #                     self.last_response
-    #                     ],
-    #             },
-    #         ]
-    #     )
-    #
-    #     response = chat_session.send_message(
-    #         "Nie ma wszystkich żądanych informacji z paragonu ze zdjęcia wcześniej. Wygeneruj jeszcze raz cały json.Wygeneruj tylko json.")
-    #     self.last_response = response.text
-    #
-    #     return response.text
+    # }

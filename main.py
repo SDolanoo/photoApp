@@ -29,7 +29,7 @@ class MyApp(MDApp):
         self.theme_cls.theme_style = "Dark"
 
 
-        self.image_path = 'paragon_2.jpg'
+        self.image_path = 'paragon_3.jpg'
         self.ai = Ai()
         self.ep = ExcelPacker()
 
@@ -69,21 +69,24 @@ class MyApp(MDApp):
     def get_prompt(self) -> list:
         def format_prompt(text) -> list:
             jo = json.loads(text)
-            date = jo['data_zakupu']
-            produkty = [produkt for produkt in jo['produkty']]
-            suma_pln = jo['suma_pln']
-            return_text = f"Data zakupu: {jo['data_zakupu']}\n"
-            for p in produkty:
-                t = f"Nazwa produkty: {p['nazwa']}, cena: {p['cena']}\n"
-                return_text = return_text + t
-            return_text = return_text + f"Suma ptu: {jo['suma_ptu']}\n"
-            return_text = return_text + f"Suma pln: {jo['suma_pln']}"
-            return [return_text, date, produkty, suma_pln]
-
+            date = jo["data_zakupu"]
+            nazwa_sklepu = jo["nazwa_sklepu"]
+            kwota_calkowita = jo["kwota_calkowita"]
+            produkty = jo["produkty"]
+            text = (f'data_zakupu: {str(jo["data_zakupu"])}\n,\
+                            nazwa_sklepu: {jo["nazwa_sklepu"]}\n,\
+                            kwota_calkowita: {jo["kwota_calkowita"]},\
+                            produkty:\n')
+            for p in jo["produkty"]:
+                if jo["produkty"].index(p) == len(jo["produkty"]) - 1:
+                    text = text + f"{p['nazwa_produktu']}: {p['cena_suma']}"
+                else:
+                    text = text + f"{p['nazwa_produktu']}: {p['cena_suma']}\n"
+            return [text, date, nazwa_sklepu, kwota_calkowita, produkty]
         # ai = Ai(path=self.parent.ids.image.source)
         self.ai.image_path = self.image_path
-        text = self.ai.ai_first_prompt()
-        data_for_dialog = format_prompt(text)
+        text = self.ai.ai_recipe_prompt()
+        data_for_dialog = format_prompt(text=text)
         return data_for_dialog
 
     def to_excel(self, desired_list: list):

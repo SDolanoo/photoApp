@@ -158,7 +158,7 @@ class ButtonsLayout2(RelativeLayout):
                 ),
                 # -----------------------Supporting text-----------------------
                 MDDialogSupportingText(
-                    text=f"{data_for_dialog[0]}",
+                    text=data_for_dialog[0],
                     halign="left"
                 ),
                 # ---------------------Button container------------------------
@@ -182,10 +182,12 @@ class ButtonsLayout2(RelativeLayout):
             self.dialog.open()
 
     def add_recipe(self, data: list, dt) -> None:
-        # current list is [return_text, date, produkty, suma_pln]
-        dbrain.add_recipe(receipt_name=f'{data[ 1 ]}',
-                          receipt_description=f"{data[ 2 ]}",
-                          receipt_amount=f"{data[ 3 ]}")
+        recipe_date = [int(data[1][0:4]), int(data[1][5:7]), int(data[1][8:])]
+        dbrain.add_recipe(uzytkownik_id=1,
+                          recipe_date=recipe_date,
+                          nazwa_sklepu=data[2],
+                          kwota_calkowita=data[3],
+                          produkty=data[4])
         self.dialog.dismiss()
         self.parent.parent.parent.current = "screen0"
         self.parent.parent.parent.remove_widget(self.parent.parent)
