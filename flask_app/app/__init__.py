@@ -1,6 +1,8 @@
 from flask import Flask
 
-from .config import DevelopmentConfig
+from .utils import convert_to_date
+
+from .config import DevelopmentConfig, TestingConfig
 
 from flask_login import LoginManager
 from sqlalchemy import select
@@ -23,11 +25,29 @@ def create_app():
     with app.app_context():
         from .views import view
         from .auth import auth
-        from .models import User, create_all
+        from .models import User, create_all, drop_all, session, Transaction, Receipt, Invoice
 
         app.register_blueprint(view)
         app.register_blueprint(auth)
+
         create_all()
+
+        from .repository.user_repo import UserRepo, UserRepoTest
+
+        if app.config['TESTING']:
+            user_repo = UserRepo(session)
+            user_repo_test = UserRepoTest(session)
+            if session.query(User).count() == 0:
+                user_repo_test.create_users()
+            user = user_repo.find_by_id(1)
+            receipt = Receipt(type='receipt', purchase_date=convert_to_date('30-11-2024'), store_name='nigger', total_amount=2137.00)
+            user.transactions.append(receipt)  
+            session.commit()
+            print(user.transactions)
+            print(receipt.user)
+
+            drop_all()
+
 
     @login_manager.user_loader
     def load_user(user_id: str) -> User:
