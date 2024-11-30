@@ -7,12 +7,12 @@ from .repository.user_repo import UserRepo
 from .forms import LoginForm, SignupForm
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_required, login_user, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
+from .models import session
 
 auth = Blueprint('auth', __name__)
-session = Session(current_app.config['ENGINE'])
-
 repo = UserRepo(session)
+
 
 @auth.route('/signup')
 def signup_get():
@@ -20,7 +20,6 @@ def signup_get():
 
 @auth.route('/login')
 def login_get():
-    print(current_app.config['ENGINE'])
     form = LoginForm()
     return render_template('login.html', form=form)
 
@@ -34,7 +33,7 @@ def signup_post():
 
     if form.validate_on_submit():
 
-        user = repo.get_by_email(form.email.data)
+        user = repo.find_by_email(form.email.data)
 
         if user:
             if user.email == form.email.data:
@@ -63,7 +62,7 @@ def login_post():
 
     if form.validate_on_submit():
         
-        user = repo.get_by_email(form.email.data)      
+        user = repo.find_by_email(form.email.data)      
         #check if email exists
         if user is None:
             flash("Email does not exist", "email_error")
