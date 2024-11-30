@@ -9,9 +9,13 @@ class ProductionConfig(Config):
     DATABASE_URI = "sqlite:///scannerappdb"
 
 class DevelopmentConfig(Config):
+    TESTING = False
     DATABASE_URI = "sqlite:///scannerappdb"
     ENGINE = create_engine(DATABASE_URI, echo=True)
 
 class TestingConfig(Config):
-    DATABASE_URI = "sqlite:///scannerappdb"
+    TESTING = True
+    DATABASE_URI = "sqlite:///testdb"
+    ENGINE = create_engine(DATABASE_URI, echo=True)
+
 
