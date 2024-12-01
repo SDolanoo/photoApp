@@ -68,12 +68,11 @@ def add_test_recipe_products():
             ilosc = random.randint(1, 10)  # Losowa ilość od 1 do 10
 
             produkt_paragon = ProduktyParagon(
-                id_paragonu=paragon.id,
-                id_kategorii=None,  # Zakładamy brak kategorii dla uproszczenia
+                paragon_id=paragon.id,
+                kategoria_id=None,  # Zakładamy brak kategorii dla uproszczenia
                 nazwa_produktu=produkt["nazwa_produktu"],
                 cena_suma=produkt["cena_suma"],
-                ilosc=ilosc,
-                kategoria_id=None
+                ilosc=ilosc
             )
             session.add(produkt_paragon)
             session.commit()
@@ -96,7 +95,7 @@ def add_user(login: str, password: str, email: str):
 
 
 def add_recipe(uzytkownik_id: int, recipe_date: list, nazwa_sklepu: str, kwota_calkowita: str, produkty: list) -> None:
-    def add_product(id_paragonu: int):
+    def add_product(paragon_id: int):
         # Dodawanie produktów
         for produkt in produkty:
             nazwa_produktu = produkt['nazwa_produktu']
@@ -104,11 +103,10 @@ def add_recipe(uzytkownik_id: int, recipe_date: list, nazwa_sklepu: str, kwota_c
             ilosc = produkt['ilosc']
             # Tworzenie obiektu produktu
             produkt_paragon = ProduktyParagon(
-                id_paragonu=id_paragonu,
+                paragon_id=paragon_id,
                 nazwa_produktu=nazwa_produktu,
                 cena_suma=cena_suma,
                 ilosc=ilosc,
-                id_kategorii=None,  # Zakładamy brak kategorii
                 kategoria_id=None
             )
             session.add(produkt_paragon)
@@ -127,7 +125,7 @@ def add_recipe(uzytkownik_id: int, recipe_date: list, nazwa_sklepu: str, kwota_c
     session.add(paragon)
     session.commit()
 
-    add_product(id_paragonu=paragon.id)
+    add_product(paragon_id=paragon.id)
 
 
 def list_all_receipts(uzytkownik_id: int) -> list:
@@ -158,7 +156,7 @@ def list_all_receipts(uzytkownik_id: int) -> list:
         # Pobierz produkty powiązane z paragonem
         produkty = (
             session.query(ProduktyParagon)
-            .filter(ProduktyParagon.id_paragonu == paragon.id)
+            .filter(ProduktyParagon.paragon_id == paragon.id)
             .all()
         )
         # Tworzenie słownika z danymi paragonu i produktami
@@ -317,7 +315,7 @@ def add_invoice(
                      z poprawnymi danymi.")
             # Tworzenie obiektu produktu
             produkt_faktura = ProduktyFaktury(
-                id_paragonu=id_faktury,
+                paragon_id=id_faktury,
                 nazwa_produktu=nazwa_produktu,
                 jednostka_miary=jednostka_miary,
                 ilosc=ilosc,

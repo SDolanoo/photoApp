@@ -12,6 +12,7 @@ from kivy.clock import mainthread
 from app_layout.homescreen0 import HomeScreen0
 from app_layout.photoscreen1 import PhotoScreen1
 from app_layout.acceptancescreen2 import AcceptanceScreen2
+from app_layout.filterscreen3 import FilterScreen3
 
 from excel_packer.excel_packer import ExcelPacker
 
@@ -36,11 +37,15 @@ class MyApp(MDApp):
         self.sm = MDScreenManager()
         self.screens = [HomeScreen0(name='screen0', controller=self),
                         PhotoScreen1(name='screen1', controller=self),
-                        AcceptanceScreen2(name='screen2', controller=self, path=self.image_path)]
+                        AcceptanceScreen2(name='screen2', controller=self, path=self.image_path),
+                        FilterScreen3(name='screen3', controller=self)]
         for s in self.screens:
             self.sm.add_widget(s)
         self.sm.current = 'screen0'
         return self.sm
+
+    def on_start(self):
+        print(self.sm.current_screen.name)
 
     def show_acceptancescreen2(self, path):
         self.image_path = path
@@ -56,6 +61,19 @@ class MyApp(MDApp):
         self.sm.transition.duration = 0.2
         self.sm.current = str(f'screen1')
 
+    def swap_filtersscreen3(self):
+        if self.sm.current_screen.name == "screen0":
+            self.sm.transition = MDSharedAxisTransition()
+            self.sm.transition.transition_axis = "x"
+            self.sm.transition.duration = 0.2
+            self.sm.current = str(f'screen3')
+        elif self.sm.current_screen.name == "screen3":
+            self.sm.transition = MDSharedAxisTransition()
+            self.sm.transition.transition_axis = "x"
+            self.sm.transition.opposite = True
+            self.sm.transition.duration = 0.2
+            self.sm.current = str(f'screen0')
+
     def back_to_homescreen0(self):
         self.sm.current = 'screen0'
 
@@ -67,26 +85,9 @@ class MyApp(MDApp):
 
 
     def get_prompt(self) -> list:
-        def format_prompt(text) -> list:
-            jo = json.loads(text)
-            date = jo["data_zakupu"]
-            nazwa_sklepu = jo["nazwa_sklepu"]
-            kwota_calkowita = jo["kwota_calkowita"]
-            produkty = jo["produkty"]
-            text = (f'data_zakupu: {str(jo["data_zakupu"])}\n,\
-                            nazwa_sklepu: {jo["nazwa_sklepu"]}\n,\
-                            kwota_calkowita: {jo["kwota_calkowita"]},\
-                            produkty:\n')
-            for p in jo["produkty"]:
-                if jo["produkty"].index(p) == len(jo["produkty"]) - 1:
-                    text = text + f"{p['nazwa_produktu']}: {p['cena_suma']}"
-                else:
-                    text = text + f"{p['nazwa_produktu']}: {p['cena_suma']}\n"
-            return [text, date, nazwa_sklepu, kwota_calkowita, produkty]
         # ai = Ai(path=self.parent.ids.image.source)
         self.ai.image_path = self.image_path
-        text = self.ai.ai_recipe_prompt()
-        data_for_dialog = format_prompt(text=text)
+        data_for_dialog = self.ai.ai_recipe_prompt()
         return data_for_dialog
 
     def to_excel(self, desired_list: list):

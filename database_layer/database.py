@@ -61,12 +61,11 @@ class ProduktyParagon(Base):
     __tablename__ = 'produkty_paragon'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    id_paragonu = Column(Integer, ForeignKey('paragony.id'), nullable=False)
-    id_kategorii = Column(Integer, ForeignKey('kategoria.id'), nullable=True)
+    paragon_id = Column(Integer, ForeignKey('paragony.id'), nullable=False)
+    kategoria_id = Column(Integer, ForeignKey('kategoria.id'), nullable=True)
     nazwa_produktu = Column(Text, nullable=False)
     cena_suma = Column(Float, nullable=False)
     ilosc = Column(Integer, nullable=False)
-    kategoria_id = Column(Integer)
 
     paragon = relationship('Paragony', back_populates='produkty')
     kategoria = relationship('Kategoria', back_populates='produkty')

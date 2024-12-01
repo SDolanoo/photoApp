@@ -9,6 +9,8 @@ HS0 = """
 #:import MDActionBottomAppBarButton kivymd.uix.appbar.MDActionBottomAppBarButton
 <HomeScreen0>:
     name: "screen0"
+    padding: 0.1, 0.1
+    
     MDTopAppBar:
         type: "small"
         theme_bg_color: "Custom"
@@ -35,8 +37,8 @@ HS0 = """
 
             MDActionTopAppBarButton:
                 id: app_bar_button
-                icon: "dots-vertical"
-                on_release: app.settings_menu_open()
+                icon: "filter"
+                on_release: app.swap_filtersscreen3()
 
 
     MDScrollView:

@@ -1,4 +1,5 @@
 import os
+import json
 import google.generativeai as genai
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -10,7 +11,7 @@ class Ai:
         self.last_response = ""
         self.history = None
 
-    def ai_recipe_prompt(self):
+    def ai_recipe_prompt(self) -> list:
         def upload_to_gemini(path, mime_type=None):
             """Uploads the given file to Gemini.
 
@@ -19,6 +20,23 @@ class Ai:
             file = genai.upload_file(path, mime_type=mime_type)
             print(f"Uploaded file '{file.display_name}' as: {file.uri}")
             return file
+
+        def format_prompt(text) -> list:
+            jo = json.loads(text)
+            date = jo["data_zakupu"]
+            nazwa_sklepu = jo["nazwa_sklepu"]
+            kwota_calkowita = jo["kwota_calkowita"]
+            produkty = jo["produkty"]
+            text = (f'data_zakupu: {str(jo["data_zakupu"])}\n,\
+                            nazwa_sklepu: {jo["nazwa_sklepu"]}\n,\
+                            kwota_calkowita: {jo["kwota_calkowita"]},\
+                            produkty:\n')
+            for p in jo["produkty"]:
+                if jo["produkty"].index(p) == len(jo["produkty"]) - 1:
+                    text = text + f"{p['nazwa_produktu']}: {p['cena_suma']}"
+                else:
+                    text = text + f"{p['nazwa_produktu']}: {p['cena_suma']}\n"
+            return [text, date, nazwa_sklepu, kwota_calkowita, produkty]
 
         # Create the model
         generation_config = {
@@ -65,7 +83,7 @@ class Ai:
         self.last_response = response.text
         self.history = chat_session.history
         print(response.text)
-        return response.text
+        return format_prompt(response.text)
     # RESPONSE.TEXT LOOKS LIKE THIS SHIT
     # {
     #     "data_zakupu": "data_zakupu",
