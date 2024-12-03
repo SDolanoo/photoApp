@@ -41,7 +41,7 @@ class MyApp(MDApp):
                         FilterScreen3(name='screen3', controller=self)]
         for s in self.screens:
             self.sm.add_widget(s)
-        self.sm.current = 'screen0'
+        self.sm.current = 'screen3'
         return self.sm
 
     def on_start(self):
