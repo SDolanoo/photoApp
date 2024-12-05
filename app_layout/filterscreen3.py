@@ -2,8 +2,11 @@ import datetime
 
 from kivy.core.window import Window
 from kivy.metrics import dp
+from kivy.properties import DictProperty
+from kivy.uix.gridlayout import GridLayout
 
 from kivymd.uix.appbar import MDBottomAppBar
+from kivymd.uix.dropdownitem import MDDropDownItem, MDDropDownItemText
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.menu import MDDropdownMenu
@@ -419,26 +422,34 @@ class PriceFilter3(MDFloatLayout):
 
 # Tylko faktura
 OF3 = """
+<NewDropDownOdbiorcy>:
+    size_hint: .8, .1
+    pos_hint: root.pos_hint
+    on_release: self.parent.open_menu(self)
+    
+    MDDropDownItemText:
+        id: odbiorcy_drop
+        text: "Wszyscy"
+    
 <OdbiorcyFilter3>:
     
     MDLabel:
         text: "Odbiorcy"
-        size_hint: None, None
-        size: "100dp", "30dp"
-        pos_hint: {"x": 0.1, "y": 0.8}
+        size_hint: 0.4, 0.1
+        pos_hint: {"center_x": 0.2, "center_y": 0.9}
         
     MDDropDownItem:
         size_hint: .8, .1
-        pos_hint: {"x": 0.1, "y": 0.65}
+        pos_hint: {"center_x": 0.5, "center_y": 0.8}
         on_release: root.open_menu(self)
-        
         MDDropDownItemText:
-            id: odbiorcy_drop
             text: "Wszyscy"
                 
     MDButton:
         style: "text"
-        pos_hint: {"x": 0.1, "y": 0.4}
+        pos_hint: {"center_x": 0.5, "center_y": 0.65}
+        on_release: root.add_new_field(self)
+        
         MDButtonIcon:
             icon: "plus"
         
@@ -446,20 +457,29 @@ OF3 = """
             text: "Dodaj odbiorce"
             
 """
+class NewDropDownOdbiorcy(MDDropDownItem):
+    pos_hint = DictProperty()
 
 
 # Tylko faktura
-class OdbiorcyFilter3(MDGridLayout):
+class OdbiorcyFilter3(MDFloatLayout):
 
     def __init__(self, **args):
         Builder.load_string(OF3)
         super().__init__()
-        self.cols = 1
-        self.row_default_height = 40
-
         self.size_hint = (1, .5)
-
         self.menu = None
+
+    def add_new_field(self, button):
+        print(button.height)
+        print(button.pos_hint)
+        button_position = button.pos_hint
+        button.pos_hint = {'center_x': button_position['center_x'], 'center_y': button_position['center_y'] - 0.15}
+        new_drop_down = NewDropDownOdbiorcy(pos_hint=button_position)
+        self.add_widget(new_drop_down)
+        if button_position['center_y'] <= .1:
+            self.remove_widget(button)
+            return
 
     def open_menu(self, item):
         if self.menu is not None:
@@ -469,49 +489,58 @@ class OdbiorcyFilter3(MDGridLayout):
         menu_items = [
             {
                 "text": f"{odbiorca}",
-                "on_release": lambda x=f"{odbiorca}": self.menu_callback(x),
+                "on_release": lambda x=f"{odbiorca}": self.menu_callback(x, item),
             } for odbiorca in odbiorcy
         ]
         self.menu = MDDropdownMenu(caller=item, items=menu_items, position="bottom", max_height=200)
         self.menu.open()
 
-    def menu_callback(self, text_item):
-        self.ids.odbiorcy_drop.text = text_item
+    def menu_callback(self, text_item, item):
+        child = item._drop_down_text
+        child.text = text_item
         self.menu.dismiss()
-
-    def on_drop_down_text(self, instance):
-        instance.dismiss()
-        print(self.ids.odbiorcy_drop.text)
 
 
 # Tylko faktura
 SF3 = """
+<NewDropDownSprzedawcy>:
+    size_hint: .8, .1
+    pos_hint: root.pos_hint
+    on_release: self.parent.open_menu(self)
+    
+    MDDropDownItemText:
+        id: odbiorcy_drop
+        text: "Wszyscy"
+        
 <SprzedawcyFilter3>:
     MDLabel:
         text: "Sprzedawcy"
-        size_hint: None, None
-        size: "100dp", "30dp"
-        pos_hint: {"x": 0.1, "y": 0.8}
+        size_hint: 0.4, 0.1
+        pos_hint: {"center_x": 0.2, "center_y": 0.9}
 
     MDDropDownItem:
         size_hint: .8, .1
-        pos_hint: {"x": 0.1, "y": 0.65}
+        pos_hint: {"center_x": 0.5, "center_y": 0.8}
         on_release: root.open_menu(self)
-
         MDDropDownItemText:
-            id: sprzedawcy_drop
             text: "Wszyscy"
 
     MDButton:
         style: "text"
-        pos_hint: {"x": 0.1, "y": 0.4}
+        pos_hint: {"center_x": 0.5, "center_y": 0.65}
+        on_release: root.add_new_field(self)
+        
         MDButtonIcon:
             icon: "plus"
-
+        
         MDButtonText: 
             text: "Dodaj sprzedawce"
 
 """
+
+
+class NewDropDownSprzedawcy(MDDropDownItem):
+    pos_hint = DictProperty()
 
 
 # Tylko faktura
@@ -523,6 +552,17 @@ class SprzedawcyFilter3(MDFloatLayout):
         self.size_hint = (1, .5)
         self.menu = None
 
+    def add_new_field(self, button):
+        print(button.height)
+        print(button.pos_hint)
+        button_position = button.pos_hint
+        button.pos_hint = {'center_x': button_position[ 'center_x' ], 'center_y': button_position[ 'center_y' ] - 0.15}
+        new_drop_down = NewDropDownOdbiorcy(pos_hint=button_position)
+        self.add_widget(new_drop_down)
+        if button_position[ 'center_y' ] <= .1:
+            self.remove_widget(button)
+            return
+
     def open_menu(self, item):
         if self.menu is not None:
             self.menu = None
@@ -531,45 +571,58 @@ class SprzedawcyFilter3(MDFloatLayout):
         menu_items = [
             {
                 "text": f"{sprzedawca}",
-                "on_release": lambda x=f"{sprzedawca}": self.menu_callback(x),
+                "on_release": lambda x=f"{sprzedawca}": self.menu_callback(x, item),
             } for sprzedawca in sprzedawcy
         ]
         self.menu = MDDropdownMenu(caller=item, items=menu_items, position="bottom", max_height=200)
         self.menu.open()
 
-    def menu_callback(self, text_item):
-        self.ids.sprzedawcy_drop.text = text_item
+    def menu_callback(self, text_item, item):
+        child = item._drop_down_text
+        child.text = text_item
         self.menu.dismiss()
 
 
 # Tylko faktura
 SkF3 = """
+<NewDropDownSklepy>:
+    size_hint: .8, .1
+    pos_hint: root.pos_hint
+    on_release: self.parent.open_menu(self)
+    
+    MDDropDownItemText:
+        id: odbiorcy_drop
+        text: "Wszyscy"
+        
 <SklepyFilter3>:
     MDLabel:
         text: "Sklepy"
-        size_hint: None, None
-        size: "100dp", "30dp"
-        pos_hint: {"x": 0.1, "y": 0.8}
+        size_hint: 0.4, 0.1
+        pos_hint: {"center_x": 0.2, "center_y": 0.9}
 
     MDDropDownItem:
         size_hint: .8, .1
-        pos_hint: {"x": 0.1, "y": 0.65}
+        pos_hint: {"center_x": 0.5, "center_y": 0.8}
         on_release: root.open_menu(self)
-
         MDDropDownItemText:
-            id: sklepy_drop
-            text: "Wszystkie"
+            text: "Wszyscy"
 
     MDButton:
         style: "text"
-        pos_hint: {"x": 0.1, "y": 0.4}
+        pos_hint: {"center_x": 0.5, "center_y": 0.65}
+        on_release: root.add_new_field(self)
+        
         MDButtonIcon:
             icon: "plus"
-
+        
         MDButtonText: 
             text: "Dodaj sklep"
 
 """
+
+
+class NewDropDownSklepy(MDDropDownItem):
+    pos_hint = DictProperty()
 
 
 # Tylko faktura
@@ -581,6 +634,17 @@ class SklepyFilter3(MDFloatLayout):
         self.size_hint = (1, .5)
         self.menu = None
 
+    def add_new_field(self, button):
+        print(button.height)
+        print(button.pos_hint)
+        button_position = button.pos_hint
+        button.pos_hint = {'center_x': button_position['center_x'], 'center_y': button_position['center_y'] - 0.15}
+        new_drop_down = NewDropDownOdbiorcy(pos_hint=button_position)
+        self.add_widget(new_drop_down)
+        if button_position['center_y'] <= .1:
+            self.remove_widget(button)
+            return
+
     def open_menu(self, item):
         if self.menu is not None:
             self.menu = None
@@ -589,14 +653,15 @@ class SklepyFilter3(MDFloatLayout):
         menu_items = [
             {
                 "text": f"{sklep}",
-                "on_release": lambda x=f"{sklep}": self.menu_callback(x),
+                "on_release": lambda x=f"{sklep}": self.menu_callback(x, item),
             } for sklep in sklepy
         ]
         self.menu = MDDropdownMenu(caller=item, items=menu_items, position="bottom", max_height=200)
         self.menu.open()
 
-    def menu_callback(self, text_item):
-        self.ids.sklepy_drop.text = text_item
+    def menu_callback(self, text_item, item):
+        child = item._drop_down_text
+        child.text = text_item
         self.menu.dismiss()
 
 
