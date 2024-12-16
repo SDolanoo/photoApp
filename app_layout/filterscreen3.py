@@ -23,6 +23,8 @@ from kivy.lang import Builder
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, \
     MDListItemTrailingSupportingText
 
+from database_layer import database_brain as dbrain
+
 FS3 = """
 
 <FilterScreen3>:
@@ -70,7 +72,7 @@ FS3 = """
                 
                 MDSegmentedButtonItem:
                     id: paragon
-                    on_active: root.change_filter("paragon")
+                    on_release: root.change_filter("paragon")
                     
                     MDSegmentButtonLabel:
                         text: "Paragon"
@@ -78,7 +80,7 @@ FS3 = """
                 
                 MDSegmentedButtonItem:
                     id: faktura
-                    on_active: root.change_filter("faktura")
+                    on_release: root.change_filter("faktura")
             
                     MDSegmentButtonLabel:
                         text: "Faktura"
@@ -139,15 +141,32 @@ class FilterScreen3(JustScreen):
         super().__init__()
         self.controller = controller
         # self.add_to_grid()
-        self.current_filter = "paragony"
+        self.current_filter = "paragon"
 
+    def on_enter(self, *args):
+        self.clear_all_values()
 
     def get_all_values(self):
-        print(self.ids.date.get_values())
-        print(self.ids.price.get_values())
-        print(self.ids.odbiorcy.get_values())
-        print(self.ids.sprzedawcy.get_values())
-        print(self.ids.sklepy.get_values())
+        # print(self.ids.date.get_values())
+        # print(self.ids.price.get_values())
+        # print(self.ids.odbiorcy.get_values())
+        # print(self.ids.sprzedawcy.get_values())
+        # print(self.ids.sklepy.get_values())
+
+        doc_type = self.current_filter
+        date_from, date_to = self.ids.date.get_values()
+        price_from, price_to = self.ids.price.get_values()
+        odbiorcy = self.ids.odbiorcy.get_values()
+        sprzedawcy = self.ids.sprzedawcy.get_values()
+        sklepy = self.ids.sklepy.get_values()
+        if doc_type == 'paragon':
+            receipts = dbrain.test_list_querry_receipts(doc_type, date_from, date_to, price_from, price_to,
+                                                        uzytkownik_id=1, sklepy=None)
+            self.controller.homescreen0_apply_filters(doc_type, receipts)
+        else:
+            invoices = dbrain.test_list_querry_invoice(doc_type, date_from, date_to, price_from, price_to,
+                                                        uzytkownik_id=1, odbiorcy=None, sprzedawcy=None)
+            self.controller.homescreen0_apply_filters(doc_type, invoices)
 
     def clear_all_values(self):
         self.ids.date.clear_values()
@@ -166,11 +185,14 @@ class FilterScreen3(JustScreen):
             self.ids.box.add_widget(list_item)
 
     def change_filter(self, a):
+        print("przed: ", self.current_filter)
         if self.current_filter == a:
+            print("no action")
             return "no action"
 
         self.current_filter = a
         # TODO show_new_filter()
+        print("po: ", self.current_filter)
 
     def show_new_filter(self):
         pass
@@ -272,13 +294,12 @@ class DateFilter3(MDFloatLayout):
         date_from = datetime.date.today()
         for child in self.children:
             if isinstance(child, CheckBox):
-                print(child.state)
                 if child.state == 'down':
-                    if child.pos_hint['center_y'] >= 0.7: # jeżeli to ostatni tydzień
+                    if child.pos_hint[ 'center_y' ] >= 0.7:  # jeżeli to ostatni tydzień
                         date_from = date_to - datetime.timedelta(days=7)
-                    if 0.45 < child.pos_hint['center_y'] < 0.7: # jeżeli początek miesiąca
+                    if 0.45 < child.pos_hint[ 'center_y' ] < 0.7:  # jeżeli początek miesiąca
                         date_from = date_to.replace(day=1)
-                    if child.pos_hint['center_y'] < 0.44:
+                    if child.pos_hint[ 'center_y' ] < 0.44:
                         date_from = date_to.replace(month=1, day=1)
             if isinstance(child, MDTextField):
                 if self.ids.field_from.text != "" and self.ids.field_to.text != "":
@@ -286,9 +307,10 @@ class DateFilter3(MDFloatLayout):
                     date_from = datetime.datetime.strptime(self.ids.field_from.text, "%d/%m/%Y")
                     date_to = datetime.datetime.strptime(self.ids.field_to.text, "%d/%m/%Y")
         if date_from == date_to:
-            return []
+            return [None, None]
         else:
             return [date_from, date_to]
+
     # def save_values(self):
     # POTENTIALLY TODO TO SAVE SPACE AND READABILITY
     def clear_values(self):
@@ -314,12 +336,12 @@ class DateFilter3(MDFloatLayout):
 
     def on_ok_from(self, instance_date_picker) -> None:
         date = instance_date_picker.get_date()
-        self.ids.field_from.text = str(date[ 0 ].strftime("%d/%m/%Y"))
+        self.ids.field_from.text = str(date[0].strftime("%d/%m/%Y"))
         instance_date_picker.dismiss()
 
     def on_ok_to(self, instance_date_picker) -> None:
         date = instance_date_picker.get_date()
-        self.ids.field_to.text = str(date[ 0 ].strftime("%d/%m/%Y"))
+        self.ids.field_to.text = str(date[0].strftime("%d/%m/%Y"))
         instance_date_picker.dismiss()
 
     def show_docked_date_picker(self, focus, from_or_to):
@@ -431,12 +453,12 @@ class PriceFilter3(MDFloatLayout):
         for child in self.children:
             if isinstance(child, CheckBox):
                 if child.state == 'down':
-                    if child.pos_hint['center_y'] >= 0.7: # jeżeli to do 100,00
+                    if child.pos_hint['center_y'] >= 0.7:  # jeżeli to do 100,00
                         price_high = 100.00
-                    if 0.45 < child.pos_hint['center_y'] < 0.7: # jeżeli od 100 do 1000
+                    if 0.45 < child.pos_hint['center_y'] < 0.7:  # jeżeli od 100 do 1000
                         price_high = 1000.00
                         price_low = 100.00
-                    if child.pos_hint['center_y'] < 0.44: # jeżeli powyżej 1000
+                    if child.pos_hint['center_y'] < 0.44:  # jeżeli powyżej 1000
                         price_high = 999999999.00
                         price_low = 1000.00
             if isinstance(child, MDTextField):
@@ -445,9 +467,10 @@ class PriceFilter3(MDFloatLayout):
                     price_low = self.ids.price_field_from.text
                     price_high = self.ids.price_field_to.text
         if price_high == price_low:
-            return []
+            return [None, None]
         else:
             return [price_low, price_high]
+
     # def save_values(self):
     # POTENTIALLY TODO TO SAVE SPACE AND READABILITY
 
@@ -490,7 +513,7 @@ class PriceFilter3(MDFloatLayout):
                 instance.error = True
 
     def textfield_validator(self) -> bool:
-        fields = [self.ids.price_field_from, self.ids.price_field_to]
+        fields = [ self.ids.price_field_from, self.ids.price_field_to ]
         for field in fields:
             try:
                 new_text = "%.2f" % float(field.text)
@@ -545,8 +568,11 @@ OF3 = """
             text: "Dodaj odbiorce"
             
 """
+
+
 class NewDropDownOdbiorcy(MDDropDownItem):
     pos_hint = DictProperty()
+
 
 class NewDeleteButton(MDIconButton):
     pos_hint = DictProperty()
@@ -562,52 +588,53 @@ class OdbiorcyFilter3(MDFloatLayout):
         self.menu = None
 
     def get_values(self):
-        values = []
+        values = [ ]
         for child in self.children:
             if isinstance(child, MDDropDownItem):
                 if child._drop_down_text.text in values:
                     continue
                 values.append(child._drop_down_text.text)
+        if len(values) > 1:
+            values.remove("Wszyscy")
         return values
 
     def clear_values(self):
-        all_widgets = self.children # list of all widgets
-        to_remove = [] # store the indexes of widgets in list above
+        all_widgets = self.children  # list of all widgets
+        to_remove = [ ]  # store the indexes of widgets in list above
         print("starting for loop....")
         for i in range(len(all_widgets)):
-            print(all_widgets[i])
-            if isinstance(all_widgets[i], MDLabel) and all_widgets[i].pos_hint['center_y'] > 0.85:
+            print(all_widgets[ i ])
+            if isinstance(all_widgets[ i ], MDLabel) and all_widgets[ i ].pos_hint[ 'center_y' ] > 0.85:
                 # don't remove giga chad label
                 continue
-            if isinstance(all_widgets[i], MDDropDownItem) and 0.75 < all_widgets[i].pos_hint['center_y'] < 0.85:
+            if isinstance(all_widgets[ i ], MDDropDownItem) and 0.75 < all_widgets[ i ].pos_hint[ 'center_y' ] < 0.85:
                 # if the widget is the first one, change option to Wszyscy and skip it then remove all widgets
-                text_field = all_widgets[i]._drop_down_text
+                text_field = all_widgets[ i ]._drop_down_text
                 text_field.text = "Wszyscy"
                 continue
-            if isinstance(all_widgets[i], MDButton) and 0.45 < all_widgets[i].pos_hint['center_x'] < 0.55:
+            if isinstance(all_widgets[ i ], MDButton) and 0.45 < all_widgets[ i ].pos_hint[ 'center_x' ] < 0.55:
                 # if the widget is "+ dodaj ..." move it to starting position and skip
-                all_widgets[i].pos_hint = {'center_x': 0.5, 'center_y': 0.65}
+                all_widgets[ i ].pos_hint = {'center_x': 0.5, 'center_y': 0.65}
                 continue
-            to_remove.append(i) # append if widget doesn't apply to above criteria
+            to_remove.append(i)  # append if widget doesn't apply to above criteria
             print("item to remove: ", i)
             print("start removing processs......")
-        for widget in to_remove[::-1]:
+        for widget in to_remove[ ::-1 ]:
             # remove widgets from a BACKWARDS list,
             # because removing items from a list is not a good idea (I did experience it here)
-            print("removing: ", all_widgets[widget])
-            self.remove_widget(all_widgets[widget])
-
+            print("removing: ", all_widgets[ widget ])
+            self.remove_widget(all_widgets[ widget ])
 
     def test_function(self, instance):
         for child in self.children:
-            if isinstance(child, MDDropDownItem) and child.pos_hint['center_y'] == instance.pos_hint[ 'center_y' ]:
+            if isinstance(child, MDDropDownItem) and child.pos_hint[ 'center_y' ] == instance.pos_hint[ 'center_y' ]:
                 self.remove_widget(instance)
                 self.remove_widget(child)
         for child in self.children:
             print(child)
-            pos_y = child.pos_hint['center_y']
-            pos_x = child.pos_hint['center_x']
-            if pos_y > instance.pos_hint['center_y']:
+            pos_y = child.pos_hint[ 'center_y' ]
+            pos_x = child.pos_hint[ 'center_x' ]
+            if pos_y > instance.pos_hint[ 'center_y' ]:
                 # skip we don't want to change widgets that are higher
                 continue
             if isinstance(child, MDButton):
@@ -617,17 +644,17 @@ class OdbiorcyFilter3(MDFloatLayout):
                 # child.pos_hint = {'center_x': pos_x - 1, 'center_y': pos_y}
             child.pos_hint = {'center_x': pos_x, 'center_y': pos_y + 0.15}
 
-
-
     def add_new_field(self, button):
-        button_position_x = button.pos_hint['center_x']
-        button_position_y = button.pos_hint['center_y']
+        button_position_x = button.pos_hint[ 'center_x' ]
+        button_position_y = button.pos_hint[ 'center_y' ]
         if button_position_y <= .1:
             button.pos_hint = {'center_x': button_position_x + 1, 'center_y': button_position_y - 0.15}
         else:
             button.pos_hint = {'center_x': button_position_x, 'center_y': button_position_y - 0.15}
-        new_delete_button = NewDeleteButton(pos_hint={'center_x': button_position_x - 0.3, 'center_y': button_position_y})
-        new_drop_down = NewDropDownOdbiorcy(pos_hint={'center_x': button_position_x + 0.1, 'center_y': button_position_y})
+        new_delete_button = NewDeleteButton(
+            pos_hint={'center_x': button_position_x - 0.3, 'center_y': button_position_y})
+        new_drop_down = NewDropDownOdbiorcy(
+            pos_hint={'center_x': button_position_x + 0.1, 'center_y': button_position_y})
         self.add_widget(new_delete_button)
         self.add_widget(new_drop_down)
 
@@ -664,7 +691,7 @@ SF3 = """
         
 <SprzedawcyFilter3>:
     MDLabel:
-        text: "Sprzedawcy"
+        text: "Sprzedawcy - tylko faktury!"
         size_hint: 0.4, 0.1
         pos_hint: {"center_x": 0.2, "center_y": 0.9}
 
@@ -703,13 +730,15 @@ class SprzedawcyFilter3(MDFloatLayout):
         self.menu = None
 
     def get_values(self):
-        values = []
+        values = [ ]
         for child in self.children:
             if isinstance(child, MDDropDownItem):
                 if child._drop_down_text.text in values:
                     continue
                 values.append(child._drop_down_text.text)
-        return values if values else ["wszyscy"]
+        if len(values) > 1:
+            values.remove("Wszyscy")
+        return values if values else [ "wszyscy" ]
 
     def clear_values(self):
         all_widgets = self.children  # list of all widgets
@@ -740,14 +769,14 @@ class SprzedawcyFilter3(MDFloatLayout):
 
     def test_function(self, instance):
         for child in self.children:
-            if isinstance(child, MDDropDownItem) and child.pos_hint['center_y'] == instance.pos_hint[ 'center_y' ]:
+            if isinstance(child, MDDropDownItem) and child.pos_hint[ 'center_y' ] == instance.pos_hint[ 'center_y' ]:
                 self.remove_widget(instance)
                 self.remove_widget(child)
         for child in self.children:
             print(child)
-            pos_y = child.pos_hint['center_y']
-            pos_x = child.pos_hint['center_x']
-            if pos_y > instance.pos_hint['center_y']:
+            pos_y = child.pos_hint[ 'center_y' ]
+            pos_x = child.pos_hint[ 'center_x' ]
+            if pos_y > instance.pos_hint[ 'center_y' ]:
                 # skip we don't want to change widgets that are higher
                 continue
             if isinstance(child, MDButton):
@@ -756,7 +785,6 @@ class SprzedawcyFilter3(MDFloatLayout):
                     pos_x -= 1
                 # child.pos_hint = {'center_x': pos_x - 1, 'center_y': pos_y}
             child.pos_hint = {'center_x': pos_x, 'center_y': pos_y + 0.15}
-
 
     def add_new_field(self, button):
         button_position_x = button.pos_hint[ 'center_x' ]
@@ -792,8 +820,6 @@ class SprzedawcyFilter3(MDFloatLayout):
         self.menu.dismiss()
 
 
-
-
 # Tylko faktura
 SkF3 = """
 <NewDropDownSklepy>:
@@ -807,7 +833,7 @@ SkF3 = """
         
 <SklepyFilter3>:
     MDLabel:
-        text: "Sklepy"
+        text: "Sklepy - tylko paragony!"
         size_hint: 0.4, 0.1
         pos_hint: {"center_x": 0.2, "center_y": 0.9}
 
@@ -846,12 +872,14 @@ class SklepyFilter3(MDFloatLayout):
         self.menu = None
 
     def get_values(self):
-        values = []
+        values = [ ]
         for child in self.children:
             if isinstance(child, MDDropDownItem):
                 if child._drop_down_text.text in values:
                     continue
                 values.append(child._drop_down_text.text)
+        if len(values) > 1:
+            values.remove("Wszyscy")
         return values
 
     def clear_values(self):
@@ -883,14 +911,14 @@ class SklepyFilter3(MDFloatLayout):
 
     def test_function(self, instance):
         for child in self.children:
-            if isinstance(child, MDDropDownItem) and child.pos_hint['center_y'] == instance.pos_hint[ 'center_y' ]:
+            if isinstance(child, MDDropDownItem) and child.pos_hint[ 'center_y' ] == instance.pos_hint[ 'center_y' ]:
                 self.remove_widget(instance)
                 self.remove_widget(child)
         for child in self.children:
             print(child)
-            pos_y = child.pos_hint['center_y']
-            pos_x = child.pos_hint['center_x']
-            if pos_y > instance.pos_hint['center_y']:
+            pos_y = child.pos_hint[ 'center_y' ]
+            pos_x = child.pos_hint[ 'center_x' ]
+            if pos_y > instance.pos_hint[ 'center_y' ]:
                 # skip we don't want to change widgets that are higher
                 continue
             if isinstance(child, MDButton):
@@ -918,7 +946,7 @@ class SklepyFilter3(MDFloatLayout):
         if self.menu is not None:
             self.menu = None
         sklepy = [ "Wszyscy", "Agata Mak", "Beata Poziomka", "Bartosz Ziemniak", "Dariusz Banan", "Agata Mak",
-                       "Beata Poziomka", "Bartosz Ziemniak", "Dariusz Banan" ]
+                   "Beata Poziomka", "Bartosz Ziemniak", "Dariusz Banan" ]
         menu_items = [
             {
                 "text": f"{sklep}",
@@ -974,3 +1002,4 @@ class ButtonLayout3(MDFloatLayout):
 
     def clear(self):
         self.parent.clear_all_values()
+        self.parent.controller.swap_filtersscreen3()

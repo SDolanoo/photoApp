@@ -1,6 +1,7 @@
 from database_layer.database import (
     Uzytkownik, Odbiorcy, Sprzedawca, Paragony, ProduktyParagon, Faktury, ProduktyFaktury, Kategoria, session
 )
+from sqlalchemy import and_, or_, between, func
 from datetime import date
 import random
 
@@ -24,7 +25,7 @@ def add_test_receipt():
     for i in range(10):
         paragon = Paragony(
             uzytkownik_id=random.choice(uzytkownicy).id,
-            data_zakupu=date(2024, 11, 28),  # Ustalona data testowa
+            data_zakupu=date(2024, i+1, i+5),  # Ustalona data testowa
             nazwa_sklepu=f"Sklep {i}",
             kwota_calkowita=random.choice(testowe_kwoty)
         )
@@ -142,7 +143,7 @@ def list_all_receipts(uzytkownik_id: int) -> list:
     # Pobierz wszystkie paragony dla danego użytkownika
     paragony = (
         session.query(Paragony)
-        .filter(Paragony.uzytkownik_id == uzytkownik_id)
+        .filter(Paragony.uzytkownik_id == uzytkownik_id).order_by(Paragony.data_zakupu.desc())
         .all()
     )
 
@@ -400,7 +401,7 @@ def list_all_invoices(uzytkownik_id: int) -> list:
     # Pobierz wszystkie paragony dla danego użytkownika
     faktury = (
         session.query(Faktury)
-        .filter(Faktury.uzytkownik_id == uzytkownik_id)
+        .filter(Faktury.uzytkownik_id == uzytkownik_id).order_by(Faktury.data_wystawienia.desc())
         .all()
     )
 
@@ -443,6 +444,115 @@ def list_all_invoices(uzytkownik_id: int) -> list:
 
     return result
 
+def search_for_documents(doc_type: str, date_from: date, date_to: date, price_from: str, price_to: str,
+                         uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None):
+    if doc_type == 'paragon':
+        query = session.query(Paragony)
+        query = query.filter(Paragony.uzytkownik_id == uzytkownik_id)
+        if date_from and date_to:
+            query = query.filter(Paragony.data_zakupu.between(date_from, date_to))
+        if price_from and price_to:
+            query = query.filter(Paragony.kwota_calkowita.between(price_from, price_to))
+        if sklepy and sklepy != "Wszyscy":
+            query = query.filter(Paragony.nazwa_sklepu.in_(sklepy))
+        query = query.order_by(Paragony.data_zakupu.desc())
+    elif doc_type == 'faktura':
+        query = session.query(Faktury)
+        query = query.filter(Faktury.uzytkownik_id == uzytkownik_id)
+        if date_from and date_to:
+            query = query.filter(Faktury.data_wystawienia.between(cleft=date_from, cright=date_to))
+        if price_from and price_to:
+            query = query.filter(Faktury.razem_brutto.between(price_from, price_to))
+        if odbiorcy:
+            query = query.join(Odbiorcy).filter(Odbiorcy.nazwa.in_(odbiorcy))
+        if sprzedawcy:
+            query = query.join(Sprzedawca).filter(Sprzedawca.nazwa.in_(sprzedawcy))
+        query = query.order_by(Faktury.data_wystawienia.desc())
+    else:
+        raise ValueError("Nieprawidłowy typ dokumentu")
+
+    return query.all()
+
+
+def test_list_querry_receipts(doc_type: str, date_from: date, date_to: date, price_from: str, price_to: str,
+                         uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None) -> list:
+    paragony = search_for_documents(doc_type, date_from, date_to, price_from, price_to,
+                                    uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None)
+
+    if not paragony:
+        print("Brak paragonów dla podanego użytkownika.")
+        return []
+
+    # Lista wyników
+    result = []
+    for paragon in paragony:
+        # Pobierz produkty powiązane z paragonem
+        produkty = (
+            session.query(ProduktyParagon)
+            .filter(ProduktyParagon.paragon_id == paragon.id)
+            .all()
+        )
+        # Tworzenie słownika z danymi paragonu i produktami
+        paragon_data = {
+            "id": paragon.id,
+            "data_zakupu": paragon.data_zakupu,
+            "nazwa_sklepu": paragon.nazwa_sklepu,
+            "kwota_calkowita": paragon.kwota_calkowita,
+            "produkty": [
+                {
+                    "nazwa_produktu": produkt.nazwa_produktu,
+                    "cena_suma": produkt.cena_suma,
+                    "ilosc": produkt.ilosc,
+                }
+                for produkt in produkty
+            ],
+        }
+        result.append(paragon_data)
+    return result
+
+def test_list_querry_invoice(doc_type: str, date_from: date, date_to: date, price_from: str, price_to: str,
+                              uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None) -> list:
+    faktury = search_for_documents(doc_type, date_from, date_to, price_from, price_to,
+                                    uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None)
+
+    if not faktury:
+        print("Brak faktur dla podanego użytkownika.")
+        return []
+
+    # Lista wyników
+    result = []
+    for faktura in faktury:
+        # Pobierz produkty powiązane z paragonem
+        produkty = (
+            session.query(ProduktyFaktury)
+            .filter(ProduktyFaktury.faktura_id == faktura.id)
+            .all()
+        )
+        # Tworzenie słownika z danymi paragonu i produktami
+        faktura_data = {
+            "id": faktura.id,
+            "numer_faktury": faktura.numer_faktury,
+            "data_wystawienia": faktura.data_wystawienia,
+            "razem_netto": faktura.razem_netto,
+            "razem_stawka": faktura.razem_stawka,
+            "razem_podatek": faktura.razem_podatek,
+            "razem_brutto": faktura.razem_brutto,
+            "produkty": [
+                {
+                    "nazwa_produktu": produkt.nazwa_produktu,
+                    "jednostka_miary": produkt.jednostka_miary,
+                    "ilosc": produkt.ilosc,
+                    "wartosc_netto": produkt.wartosc_netto,
+                    "stawka_vat": produkt.stawka_vat,
+                    "podatek_vat": produkt.podatek_vat,
+                    "brutto": produkt.brutto,
+                }
+                for produkt in produkty
+            ],
+        }
+        result.append(faktura_data)
+
+    return result
 
 # add_user(login="test", password="123", email="test@test.com")
 # add_test_receipt()
@@ -463,7 +573,7 @@ def list_all_invoices(uzytkownik_id: int) -> list:
 #                 faktura_data={
 #                     "numer_faktury": f"FV/2024/11/00{i}",
 #                     "nr_rachunku_bankowego": f"{i}{i} 3456 7890 1234 5678 9012 3456",
-#                     "data_wystawienia": date(2024, 11, 28),
+#                     "data_wystawienia": date(2024, i+1, i+3),
 #                     "data_sprzedaży": None,
 #                     "razem_netto": f"{i}000.00",
 #                     "razem_stawka": "23%",

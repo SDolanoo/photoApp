@@ -22,6 +22,8 @@ import os
 import json
 import threading
 from gen_ai.ai import Ai
+from datetime import date
+import random
 
 
 class MyApp(MDApp):
@@ -73,6 +75,10 @@ class MyApp(MDApp):
             self.sm.transition.opposite = True
             self.sm.transition.duration = 0.2
             self.sm.current = str(f'screen0')
+
+    def homescreen0_apply_filters(self, doc_type, filters):
+        self.screens[0].apply_filters(doc_type, filters)
+        self.swap_filtersscreen3()
 
     def back_to_homescreen0(self):
         self.sm.current = 'screen0'

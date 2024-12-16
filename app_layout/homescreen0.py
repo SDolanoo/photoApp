@@ -137,6 +137,26 @@ class HomeScreen0(JustScreen):
         # set receipt count to change label on Navigaion Drawer
         self.set_navigation_drawer_count()
 
+    def apply_filters(self, doc_type: str, filters):
+        self.clear_grid_layout()
+
+        if doc_type == "paragon":
+            for receipt in filters:
+                list_item = MDListItem(
+                    MDListItemHeadlineText(text=f"{receipt['data_zakupu']}"),
+                    MDListItemSupportingText(text=f"{receipt['nazwa_sklepu']}"),
+                    MDListItemTrailingSupportingText(text=f"{receipt['kwota_calkowita']}")
+                )
+                self.ids.box.add_widget(list_item)
+        else:
+            for invoice in filters:
+                list_item = MDListItem(
+                    MDListItemHeadlineText(text=f"{invoice[ 'data_wystawienia' ]}"),
+                    MDListItemSupportingText(text=f"{invoice[ 'numer_faktury' ]}"),
+                    MDListItemTrailingSupportingText(text=f"{invoice[ 'razem_brutto' ]}")
+                )
+                self.ids.box.add_widget(list_item)
+
     def show_faktury(self):
         self.clear_grid_layout()
 
@@ -144,8 +164,8 @@ class HomeScreen0(JustScreen):
 
         for invoice in all_invoices:
             list_item = MDListItem(
-                MDListItemHeadlineText(text=f"{invoice['numer_faktury']}"),
-                MDListItemSupportingText(text=f"{invoice['razem_stawka']}"),
+                MDListItemHeadlineText(text=f"{invoice['data_wystawienia']}"),
+                MDListItemSupportingText(text=f"{invoice['numer_faktury']}"),
                 MDListItemTrailingSupportingText(text=f"{invoice['razem_brutto']}")
             )
             self.ids.box.add_widget(list_item)
