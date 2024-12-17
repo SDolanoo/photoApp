@@ -284,7 +284,7 @@ def search_for_documents(doc_type: str, date_from: date, date_to: date, price_fr
     return query.all()
 
 
-def test_list_querry_receipts(doc_type: str, date_from: date, date_to: date, price_from: str, price_to: str,
+def list_filtered_receipts(doc_type: str, date_from: date, date_to: date, price_from: str, price_to: str,
                          uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None) -> list:
     paragony = search_for_documents(doc_type, date_from, date_to, price_from, price_to,
                                     uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None)
@@ -320,7 +320,7 @@ def test_list_querry_receipts(doc_type: str, date_from: date, date_to: date, pri
         result.append(paragon_data)
     return result
 
-def test_list_querry_invoice(doc_type: str, date_from: date, date_to: date, price_from: str, price_to: str,
+def list_filtered_invoice(doc_type: str, date_from: date, date_to: date, price_from: str, price_to: str,
                               uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None) -> list:
     faktury = search_for_documents(doc_type, date_from, date_to, price_from, price_to,
                                     uzytkownik_id=1, odbiorcy=None, sprzedawcy=None, sklepy=None)
