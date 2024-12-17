@@ -13,6 +13,7 @@ from app_layout.homescreen0 import HomeScreen0
 from app_layout.photoscreen1 import PhotoScreen1
 from app_layout.acceptancescreen2 import AcceptanceScreen2
 from app_layout.filterscreen3 import FilterScreen3
+from app_layout.detailsscreen4 import DetailsScreen4
 
 from excel_packer.excel_packer import ExcelPacker
 
@@ -40,7 +41,8 @@ class MyApp(MDApp):
         self.screens = [HomeScreen0(name='screen0', controller=self),
                         PhotoScreen1(name='screen1', controller=self),
                         AcceptanceScreen2(name='screen2', controller=self, path=self.image_path),
-                        FilterScreen3(name='screen3', controller=self)]
+                        FilterScreen3(name='screen3', controller=self),
+                        DetailsScreen4(name='screen4', controller=self)]
         for s in self.screens:
             self.sm.add_widget(s)
         self.sm.current = 'screen3'
@@ -75,6 +77,23 @@ class MyApp(MDApp):
             self.sm.transition.opposite = True
             self.sm.transition.duration = 0.2
             self.sm.current = str(f'screen0')
+
+    def swap_detailsscreen4(self):
+        if self.sm.current_screen.name == "screen0":
+            self.sm.transition = MDSharedAxisTransition()
+            self.sm.transition.transition_axis = "x"
+            self.sm.transition.duration = 0.2
+            self.sm.current = str(f'screen4')
+        elif self.sm.current_screen.name == "screen4":
+            self.sm.transition = MDSharedAxisTransition()
+            self.sm.transition.transition_axis = "x"
+            self.sm.transition.opposite = True
+            self.sm.transition.duration = 0.2
+            self.sm.current = str(f'screen0')
+
+    def show_detailsscreen4(self, details_info):
+        self.screens[4].details = details_info
+        self.swap_detailsscreen4()
 
     def homescreen0_apply_filters(self, doc_type, filters):
         self.screens[0].apply_filters(doc_type, filters)

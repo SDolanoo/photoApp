@@ -1,3 +1,5 @@
+from functools import partial
+
 from app_layout.just_screen import JustScreen
 from kivy.lang import Builder
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTrailingSupportingText
@@ -121,6 +123,10 @@ class HomeScreen0(JustScreen):
     def fill_the_grid(self):
         self.show_paragony()
 
+    def show_details(self, *args):
+        details_info = args
+        self.controller.show_detailsscreen4(details_info)
+
     def show_paragony(self):
         self.clear_grid_layout()
 
@@ -130,7 +136,8 @@ class HomeScreen0(JustScreen):
             list_item = MDListItem(
                 MDListItemHeadlineText(text=f"{receipt['data_zakupu']}"),
                 MDListItemSupportingText(text=f"{receipt['nazwa_sklepu']}"),
-                MDListItemTrailingSupportingText(text=f"{receipt['kwota_calkowita']}")
+                MDListItemTrailingSupportingText(text=f"{receipt['kwota_calkowita']}"),
+                on_release=partial(self.show_details, receipt)
             )
             self.ids.box.add_widget(list_item)
 
