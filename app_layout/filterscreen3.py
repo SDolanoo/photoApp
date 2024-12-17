@@ -1,29 +1,22 @@
-import datetime
-import time
-
-from kivy.core.window import Window
-from kivy.metrics import dp
 from kivy.properties import DictProperty
-from kivy.uix.gridlayout import GridLayout
-
-from kivymd.uix.appbar import MDBottomAppBar
-from kivymd.uix.dropdownitem import MDDropDownItem, MDDropDownItemText
+from kivymd.uix.dropdownitem import MDDropDownItem
 from kivymd.uix.floatlayout import MDFloatLayout
-from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.label import MDLabel
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.pickers import MDDockedDatePicker
-from kivymd.uix.selectioncontrol import MDCheckbox
 from kivy.uix.checkbox import CheckBox
 from kivymd.uix.textfield import MDTextField
-from kivymd.uix.button import MDIconButton, MDButton
-
-from app_layout.just_screen import JustScreen
+from kivymd.uix.button import MDIconButton
 from kivy.lang import Builder
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, \
     MDListItemTrailingSupportingText
 
+from app_layout.just_screen import JustScreen
+from app_layout_extended_functions import filterscreen3_extenders as fs3e
 from database_layer import database_brain as dbrain
+
+import datetime
+
 
 FS3 = """
 
@@ -160,11 +153,11 @@ class FilterScreen3(JustScreen):
         sprzedawcy = self.ids.sprzedawcy.get_values()
         sklepy = self.ids.sklepy.get_values()
         if doc_type == 'paragon':
-            receipts = dbrain.test_list_querry_receipts(doc_type, date_from, date_to, price_from, price_to,
+            receipts = dbrain.list_filtered_receipts(doc_type, date_from, date_to, price_from, price_to,
                                                         uzytkownik_id=1, sklepy=None)
             self.controller.homescreen0_apply_filters(doc_type, receipts)
         else:
-            invoices = dbrain.test_list_querry_invoice(doc_type, date_from, date_to, price_from, price_to,
+            invoices = dbrain.list_filtered_invoice(doc_type, date_from, date_to, price_from, price_to,
                                                         uzytkownik_id=1, odbiorcy=None, sprzedawcy=None)
             self.controller.homescreen0_apply_filters(doc_type, invoices)
 
@@ -185,14 +178,12 @@ class FilterScreen3(JustScreen):
             self.ids.box.add_widget(list_item)
 
     def change_filter(self, a):
-        print("przed: ", self.current_filter)
         if self.current_filter == a:
             print("no action")
             return "no action"
 
         self.current_filter = a
         # TODO show_new_filter()
-        print("po: ", self.current_filter)
 
     def show_new_filter(self):
         pass
@@ -207,7 +198,7 @@ DF3 = """
         pos_hint: {"center_x": 0.1, "center_y": 0.9}
     
     MDLabel:
-        text: "Option 1"
+        text: "Ostatni tydzien"
         size_hint: None, None
         size: "100dp", "30dp"
         pos_hint: {"center_x": 0.2, "center_y": 0.75}
@@ -221,7 +212,7 @@ DF3 = """
         pos_hint: {"center_x": 0.1, "center_y": 0.75}
     
     MDLabel:
-        text: "Option 2"
+        text: "Ostatni miesiac"
         size_hint: None, None
         size: "100dp", "30dp"
         pos_hint: {"center_x": 0.2, "center_y": 0.55}
@@ -235,7 +226,7 @@ DF3 = """
 
     
     MDLabel:
-        text: "Option 3"
+        text: "Ostatni rok"
         size_hint: None, None
         size: "100dp", "30dp"
         pos_hint: {"center_x": 0.2, "center_y": 0.35}
@@ -530,7 +521,7 @@ OF3 = """
     style: "standard"
     icon: "alpha-x-circle-outline"
     pos_hint: root.pos_hint
-    on_release: self.parent.test_function(self)
+    on_release: self.parent.delete_DropDownItem(self)
 
 <NewDropDownOdbiorcy>:
     size_hint: .7, .1
@@ -588,61 +579,13 @@ class OdbiorcyFilter3(MDFloatLayout):
         self.menu = None
 
     def get_values(self):
-        values = [ ]
-        for child in self.children:
-            if isinstance(child, MDDropDownItem):
-                if child._drop_down_text.text in values:
-                    continue
-                values.append(child._drop_down_text.text)
-        if len(values) > 1:
-            values.remove("Wszyscy")
-        return values
+        fs3e.get_values_for_OF3_SP3_SkF3(self)
 
     def clear_values(self):
-        all_widgets = self.children  # list of all widgets
-        to_remove = [ ]  # store the indexes of widgets in list above
-        print("starting for loop....")
-        for i in range(len(all_widgets)):
-            print(all_widgets[ i ])
-            if isinstance(all_widgets[ i ], MDLabel) and all_widgets[ i ].pos_hint[ 'center_y' ] > 0.85:
-                # don't remove giga chad label
-                continue
-            if isinstance(all_widgets[ i ], MDDropDownItem) and 0.75 < all_widgets[ i ].pos_hint[ 'center_y' ] < 0.85:
-                # if the widget is the first one, change option to Wszyscy and skip it then remove all widgets
-                text_field = all_widgets[ i ]._drop_down_text
-                text_field.text = "Wszyscy"
-                continue
-            if isinstance(all_widgets[ i ], MDButton) and 0.45 < all_widgets[ i ].pos_hint[ 'center_x' ] < 0.55:
-                # if the widget is "+ dodaj ..." move it to starting position and skip
-                all_widgets[ i ].pos_hint = {'center_x': 0.5, 'center_y': 0.65}
-                continue
-            to_remove.append(i)  # append if widget doesn't apply to above criteria
-            print("item to remove: ", i)
-            print("start removing processs......")
-        for widget in to_remove[ ::-1 ]:
-            # remove widgets from a BACKWARDS list,
-            # because removing items from a list is not a good idea (I did experience it here)
-            print("removing: ", all_widgets[ widget ])
-            self.remove_widget(all_widgets[ widget ])
+        fs3e.clear_values_for_OF3_SP3_SkF3(self)
 
-    def test_function(self, instance):
-        for child in self.children:
-            if isinstance(child, MDDropDownItem) and child.pos_hint[ 'center_y' ] == instance.pos_hint[ 'center_y' ]:
-                self.remove_widget(instance)
-                self.remove_widget(child)
-        for child in self.children:
-            print(child)
-            pos_y = child.pos_hint[ 'center_y' ]
-            pos_x = child.pos_hint[ 'center_x' ]
-            if pos_y > instance.pos_hint[ 'center_y' ]:
-                # skip we don't want to change widgets that are higher
-                continue
-            if isinstance(child, MDButton):
-                # move hidden button from the out of screen right by moving X position to the left
-                if pos_x > 1:
-                    pos_x -= 1
-                # child.pos_hint = {'center_x': pos_x - 1, 'center_y': pos_y}
-            child.pos_hint = {'center_x': pos_x, 'center_y': pos_y + 0.15}
+    def delete_DropDownItem(self, btn):
+        fs3e.delete_DropDownItem_for_OF3_SP3_SkF3(instance=self, btn=btn)
 
     def add_new_field(self, button):
         button_position_x = button.pos_hint[ 'center_x' ]
@@ -730,61 +673,13 @@ class SprzedawcyFilter3(MDFloatLayout):
         self.menu = None
 
     def get_values(self):
-        values = [ ]
-        for child in self.children:
-            if isinstance(child, MDDropDownItem):
-                if child._drop_down_text.text in values:
-                    continue
-                values.append(child._drop_down_text.text)
-        if len(values) > 1:
-            values.remove("Wszyscy")
-        return values if values else [ "wszyscy" ]
+        fs3e.get_values_for_OF3_SP3_SkF3(self)
 
     def clear_values(self):
-        all_widgets = self.children  # list of all widgets
-        to_remove = [ ]  # store the indexes of widgets in list above
-        print("starting for loop....")
-        for i in range(len(all_widgets)):
-            print(all_widgets[ i ])
-            if isinstance(all_widgets[ i ], MDLabel) and all_widgets[ i ].pos_hint[ 'center_y' ] > 0.85:
-                # don't remove giga chad label
-                continue
-            if isinstance(all_widgets[ i ], MDDropDownItem) and 0.75 < all_widgets[ i ].pos_hint[ 'center_y' ] < 0.85:
-                # if the widget is the first one, change option to Wszyscy and skip it then remove all widgets
-                text_field = all_widgets[ i ]._drop_down_text
-                text_field.text = "Wszyscy"
-                continue
-            if isinstance(all_widgets[ i ], MDButton) and 0.45 < all_widgets[ i ].pos_hint[ 'center_x' ] < 0.55:
-                # if the widget is "+ dodaj ..." move it to starting position and skip
-                all_widgets[ i ].pos_hint = {'center_x': 0.5, 'center_y': 0.65}
-                continue
-            to_remove.append(i)  # append if widget doesn't apply to above criteria
-            print("item to remove: ", i)
-            print("start removing processs......")
-        for widget in to_remove[ ::-1 ]:
-            # remove widgets from a BACKWARDS list,
-            # because removing items from a list is not a good idea (I did experience it here)
-            print("removing: ", all_widgets[ widget ])
-            self.remove_widget(all_widgets[ widget ])
+        fs3e.clear_values_for_OF3_SP3_SkF3(self)
 
-    def test_function(self, instance):
-        for child in self.children:
-            if isinstance(child, MDDropDownItem) and child.pos_hint[ 'center_y' ] == instance.pos_hint[ 'center_y' ]:
-                self.remove_widget(instance)
-                self.remove_widget(child)
-        for child in self.children:
-            print(child)
-            pos_y = child.pos_hint[ 'center_y' ]
-            pos_x = child.pos_hint[ 'center_x' ]
-            if pos_y > instance.pos_hint[ 'center_y' ]:
-                # skip we don't want to change widgets that are higher
-                continue
-            if isinstance(child, MDButton):
-                # move hidden button from the out of screen right by moving X position to the left
-                if pos_x > 1:
-                    pos_x -= 1
-                # child.pos_hint = {'center_x': pos_x - 1, 'center_y': pos_y}
-            child.pos_hint = {'center_x': pos_x, 'center_y': pos_y + 0.15}
+    def delete_DropDownItem(self, btn):
+        fs3e.delete_DropDownItem_for_OF3_SP3_SkF3(instance=self, btn=btn)
 
     def add_new_field(self, button):
         button_position_x = button.pos_hint[ 'center_x' ]
@@ -872,61 +767,13 @@ class SklepyFilter3(MDFloatLayout):
         self.menu = None
 
     def get_values(self):
-        values = [ ]
-        for child in self.children:
-            if isinstance(child, MDDropDownItem):
-                if child._drop_down_text.text in values:
-                    continue
-                values.append(child._drop_down_text.text)
-        if len(values) > 1:
-            values.remove("Wszyscy")
-        return values
+        fs3e.get_values_for_OF3_SP3_SkF3(self)
 
     def clear_values(self):
-        all_widgets = self.children  # list of all widgets
-        to_remove = [ ]  # store the indexes of widgets in list above
-        print("starting for loop....")
-        for i in range(len(all_widgets)):
-            print(all_widgets[ i ])
-            if isinstance(all_widgets[ i ], MDLabel) and all_widgets[ i ].pos_hint[ 'center_y' ] > 0.85:
-                # don't remove giga chad label
-                continue
-            if isinstance(all_widgets[ i ], MDDropDownItem) and 0.75 < all_widgets[ i ].pos_hint[ 'center_y' ] < 0.85:
-                # if the widget is the first one, change option to Wszyscy and skip it then remove all widgets
-                text_field = all_widgets[ i ]._drop_down_text
-                text_field.text = "Wszyscy"
-                continue
-            if isinstance(all_widgets[ i ], MDButton) and 0.45 < all_widgets[ i ].pos_hint[ 'center_x' ] < 0.55:
-                # if the widget is "+ dodaj ..." move it to starting position and skip
-                all_widgets[ i ].pos_hint = {'center_x': 0.5, 'center_y': 0.65}
-                continue
-            to_remove.append(i)  # append if widget doesn't apply to above criteria
-            print("item to remove: ", i)
-            print("start removing processs......")
-        for widget in to_remove[ ::-1 ]:
-            # remove widgets from a BACKWARDS list,
-            # because removing items from a list is not a good idea (I did experience it here)
-            print("removing: ", all_widgets[ widget ])
-            self.remove_widget(all_widgets[ widget ])
+        fs3e.clear_values_for_OF3_SP3_SkF3(self)
 
-    def test_function(self, instance):
-        for child in self.children:
-            if isinstance(child, MDDropDownItem) and child.pos_hint[ 'center_y' ] == instance.pos_hint[ 'center_y' ]:
-                self.remove_widget(instance)
-                self.remove_widget(child)
-        for child in self.children:
-            print(child)
-            pos_y = child.pos_hint[ 'center_y' ]
-            pos_x = child.pos_hint[ 'center_x' ]
-            if pos_y > instance.pos_hint[ 'center_y' ]:
-                # skip we don't want to change widgets that are higher
-                continue
-            if isinstance(child, MDButton):
-                # move hidden button from the out of screen right by moving X position to the left
-                if pos_x > 1:
-                    pos_x -= 1
-                # child.pos_hint = {'center_x': pos_x - 1, 'center_y': pos_y}
-            child.pos_hint = {'center_x': pos_x, 'center_y': pos_y + 0.15}
+    def delete_DropDownItem(self, btn):
+        fs3e.delete_DropDownItem_for_OF3_SP3_SkF3(instance=self, btn=btn)
 
     def add_new_field(self, button):
         button_position_x = button.pos_hint[ 'center_x' ]
