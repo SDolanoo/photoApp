@@ -8,6 +8,10 @@ from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.transition import MDSharedAxisTransition
 from kivy.clock import mainthread
+from kivy.core.window import Window
+from kivy.utils import platform
+
+from android_permissions import AndroidPermissions
 
 from app_layout.homescreen0 import HomeScreen0
 from app_layout.photoscreen1 import PhotoScreen1
@@ -25,6 +29,29 @@ import threading
 from gen_ai.ai import Ai
 from datetime import date
 import random
+
+
+if platform == 'android':
+    from jnius import autoclass
+    from android.runnable import run_on_ui_thread
+    from android import mActivity
+    View = autoclass('android.view.View')
+
+    @run_on_ui_thread
+    def hide_landscape_status_bar(instance, width, height):
+        # width,height gives false layout events, on pinch/spread
+        # so use Window.width and Window.height
+        if Window.width > Window.height:
+            # Hide status bar
+            option = View.SYSTEM_UI_FLAG_FULLSCREEN
+        else:
+            # Show status bar
+            option = View.SYSTEM_UI_FLAG_VISIBLE
+        mActivity.getWindow().getDecorView().setSystemUiVisibility(option)
+elif platform != 'ios':
+    # Dispose of that nasty red dot, required for gestures4kivy.
+    from kivy.config import Config
+    Config.set('input', 'mouse', 'mouse, disable_multitouch')
 
 
 class MyApp(MDApp):
@@ -49,7 +76,10 @@ class MyApp(MDApp):
         return self.sm
 
     def on_start(self):
-        print(self.sm.current_screen.name)
+        self.dont_gc = AndroidPermissions(self.start_app)
+
+    def start_app(self):
+        self.dont_gc = None
 
     def show_acceptancescreen2(self, path):
         self.image_path = path
