@@ -1,9 +1,7 @@
-from database_layer.database import (
-    Uzytkownik, Odbiorcy, Sprzedawca, Paragony, ProduktyParagon, Faktury, ProduktyFaktury, Kategoria, session
+from pythonPhotoApp.database_layer.database import (
+    Uzytkownik, Odbiorcy, Sprzedawca, Paragony, ProduktyParagon, Faktury, ProduktyFaktury, session
 )
-from sqlalchemy import and_, or_, between, func
 from datetime import date
-import random
 
 
 def add_user(login: str, password: str, email: str):

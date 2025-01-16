@@ -1,4 +1,4 @@
-from kivy.clock import Clock, mainthread
+from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
@@ -15,10 +15,8 @@ from kivymd.uix.dialog import (
 import os
 from functools import partial
 
-from app_layout.just_screen import JustScreen
-from database_layer import database_brain as dbrain
-
-
+from pythonPhotoApp.app_layout.just_screen import JustScreen
+from pythonPhotoApp.database_layer import database_brain as dbrain
 
 AS2 = """
 <AcceptanceScreen2>:

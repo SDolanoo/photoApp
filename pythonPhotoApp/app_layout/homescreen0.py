@@ -1,11 +1,10 @@
 from functools import partial
 
-from app_layout.just_screen import JustScreen
+from pythonPhotoApp.app_layout.just_screen import JustScreen
 from kivy.lang import Builder
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTrailingSupportingText
 
-from database_layer import database_brain as dbrain
-
+from pythonPhotoApp.database_layer import database_brain as dbrain
 
 HS0 = """
 #:import MDActionBottomAppBarButton kivymd.uix.appbar.MDActionBottomAppBarButton

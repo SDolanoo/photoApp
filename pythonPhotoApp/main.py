@@ -7,29 +7,21 @@ DELETE 0 AND UNCOMMENT COMMENT
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.transition import MDSharedAxisTransition
-from kivy.clock import mainthread
 from kivy.core.window import Window
 from kivy.utils import platform
 
-from android_permissions import AndroidPermissions
+from pythonPhotoApp.android_permissions import AndroidPermissions
 
-from app_layout.homescreen0 import HomeScreen0
-from app_layout.photoscreen1 import PhotoScreen1
-from app_layout.acceptancescreen2 import AcceptanceScreen2
-from app_layout.filterscreen3 import FilterScreen3
-from app_layout.detailsscreen4 import DetailsScreen4
+from pythonPhotoApp.app_layout.homescreen0 import HomeScreen0
+from pythonPhotoApp.app_layout.photoscreen1 import PhotoScreen1
+from pythonPhotoApp.app_layout.acceptancescreen2 import AcceptanceScreen2
+from pythonPhotoApp.app_layout.filterscreen3 import FilterScreen3
+from pythonPhotoApp.app_layout.detailsscreen4 import DetailsScreen4
 
-from excel_packer.excel_packer import ExcelPacker
-
-from database_layer import database_brain as dbrain
+from pythonPhotoApp.excel_packer.excel_packer import ExcelPacker
 
 import os
-import json
-import threading
-from gen_ai.ai import Ai
-from datetime import date
-import random
-
+from pythonPhotoApp.gen_ai.ai import Ai
 
 if platform == 'android':
     from jnius import autoclass
@@ -133,10 +125,10 @@ class MyApp(MDApp):
         self.sm.current = 'screen0'
 
     def delete_files(self):
-        files = [f for f in os.listdir('Photos')]
+        files = [ f for f in os.listdir('Photos') ]
         for f in files:
-            if os.path.isfile(f'Photos/{f}'):
-                os.remove(f"Photos/{f}")
+            if os.path.isfile(f'pythonPhotoApp/Photos/{f}'):
+                os.remove(f"pythonPhotoApp/Photos/{f}")
 
 
     def get_prompt(self) -> list:

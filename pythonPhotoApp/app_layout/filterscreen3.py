@@ -1,7 +1,6 @@
 from kivy.properties import DictProperty
 from kivymd.uix.dropdownitem import MDDropDownItem
 from kivymd.uix.floatlayout import MDFloatLayout
-from kivymd.uix.label import MDLabel
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.pickers import MDDockedDatePicker
 from kivy.uix.checkbox import CheckBox
@@ -11,9 +10,9 @@ from kivy.lang import Builder
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, \
     MDListItemTrailingSupportingText
 
-from app_layout.just_screen import JustScreen
-from app_layout_extended_functions import filterscreen3_extenders as fs3e
-from database_layer import database_brain as dbrain
+from pythonPhotoApp.app_layout.just_screen import JustScreen
+from pythonPhotoApp.app_layout_extended_functions import filterscreen3_extenders as fs3e
+from pythonPhotoApp.database_layer import database_brain as dbrain
 
 import datetime
 

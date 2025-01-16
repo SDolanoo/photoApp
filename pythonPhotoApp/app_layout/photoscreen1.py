@@ -5,13 +5,11 @@ from kivy.properties import ObjectProperty
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.utils import platform
-from camera4kivy import Preview
 
 from datetime import datetime
 from functools import partial
 
-from app_layout.just_screen import JustScreen
-from app_layout.acceptancescreen2 import AcceptanceScreen2
+from pythonPhotoApp.app_layout.just_screen import JustScreen
 
 PS1 = """
 <PhotoScreen1>:
